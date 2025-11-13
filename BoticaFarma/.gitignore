@@ -1,0 +1,76 @@
+#################################
+# ARCHIVOS DEL PROYECTO SPRING  #
+#################################
+
+HELP.md
+target/
+out/
+
+# Previene subir artefactos empaquetados
+*.jar
+*.war
+
+#################################
+# MAVEN                          #
+#################################
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+.mvn/wrapper/*
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Para ignorar carpetas target dentro de módulos
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+#################################
+# SPRING TOOL SUITE (STS)       #
+#################################
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+#################################
+# INTELLIJ IDEA                 #
+#################################
+.idea/
+*.iws
+*.iml
+*.ipr
+
+#################################
+# NETBEANS                      #
+#################################
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+#################################
+# VS CODE                       #
+#################################
+.vscode/
+
+#################################
+# LOGS                          #
+#################################
+logs/
+*.log
+
+#################################
+# SISTEMA                        #
+#################################
+.DS_Store
+Thumbs.db
+
+#################################
+# VARIABLES DE ENTORNO (.env)   #
+#################################
+.env

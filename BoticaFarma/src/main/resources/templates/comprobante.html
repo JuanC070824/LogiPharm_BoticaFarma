@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Comprobante de Pago</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .empresa {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .comprobante {
+            font-size: 14px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .datos {
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10px;
+        }
+        .tabla th, .tabla td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: left;
+        }
+        .tabla th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .totales {
+            text-align: right;
+            margin-top: 20px;
+            font-size: 11px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        .total-final {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="empresa">BOTICAFARMA</div>
+    <div class="comprobante" th:text="${tipoComprobante} + ' ELECTRÓNICA'"></div>
+    <div>RUC: 20123456789</div>
+    <div>Av. Principal 123 - Lima, Perú</div>
+    <div>Teléfono: (01) 123-4567</div>
+</div>
+
+<div class="datos">
+    <div><strong>N° Comprobante:</strong> <span th:text="${venta.idVenta}"></span></div>
+    <div><strong>Fecha Emisión:</strong> <span th:text="${fechaEmision}"></span></div>
+    <div><strong>Método Pago:</strong> <span th:text="${venta.metodopago}"></span></div>
+</div>
+
+<div class="datos" th:if="${cliente != null}">
+    <div><strong>Cliente:</strong> <span th:text="${cliente.nombre + ' ' + cliente.apellidoPat + ' ' + cliente.apellidoMat}"></span></div>
+    <div><strong>DNI:</strong> <span th:text="${cliente.dni}"></span></div>
+    <div th:if="${tipoComprobante == 'FACTURA'}"><strong>RUC:</strong> <span th:text="${cliente.ruc}"></span></div>
+</div>
+<div class="datos" th:unless="${cliente != null}">
+    <div><strong>Cliente:</strong> CLIENTE COMÚN</div>
+    <div><strong>DNI:</strong> 00000000</div>
+</div>
+
+<table class="tabla">
+    <thead>
+    <tr>
+        <th width="50%">Producto</th>
+        <th width="15%">Cantidad</th>
+        <th width="20%">Precio Unit.</th>
+        <th width="15%">Subtotal</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="detalle : ${venta.detalles}">
+        <td th:text="${detalle.producto.nombreProducto}"></td>
+        <td th:text="${detalle.cantidad}" style="text-align: center;"></td>
+        <td th:text="'S/ ' + ${#numbers.formatDecimal(detalle.precio_unitario, 1, 2)}" style="text-align: right;"></td>
+        <td th:text="'S/ ' + ${#numbers.formatDecimal(detalle.subtotal, 1, 2)}" style="text-align: right;"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="totales">
+    <div><strong>Subtotal:</strong> S/ <span th:text="${#numbers.formatDecimal(venta.total.divide(new java.math.BigDecimal('1.18'), 2, java.math.RoundingMode.HALF_UP), 1, 2)}"></span></div>
+    <div><strong>IGV (18%):</strong> S/ <span th:text="${#numbers.formatDecimal(venta.total.multiply(new java.math.BigDecimal('0.18')), 1, 2)}"></span></div>
+    <div class="total-final"><strong>TOTAL:</strong> S/ <span th:text="${#numbers.formatDecimal(venta.total, 1, 2)}"></span></div>
+</div>
+
+<div class="footer">
+    <div><strong>¡Gracias por su compra!</strong></div>
+    <div>Este es un comprobante electrónico generado automáticamente</div>
+    <div>Representación impresa de comprobante electrónico</div>
+</div>
+</body>
+</html>
