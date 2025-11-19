@@ -1,3 +1,4 @@
 # DIRECTORIOS DE DATOS GENERADOS
 # Ignorar la carpeta de comprobantes que contiene archivos generados y no es código fuente.
 /Comprobantes
+.env

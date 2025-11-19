@@ -40,6 +40,7 @@ public class SecurityFilterChainConfig {
                         .requestMatchers("/boticafarma/lotes/**").hasRole("ADMIN")
                         .requestMatchers("/boticafarma/ventas/**").authenticated()
                         .requestMatchers("/boticafarma/**").permitAll()
+                        .requestMatchers("/boticafarma/login").permitAll()
                         .anyRequest().authenticated()
         );
 
