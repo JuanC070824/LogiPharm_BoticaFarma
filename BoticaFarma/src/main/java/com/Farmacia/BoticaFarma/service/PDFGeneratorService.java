@@ -86,7 +86,7 @@ public class PDFGeneratorService {
 
         // Datos del cliente
         if (cliente != null) {
-            document.add(new Paragraph("Cliente: " + cliente.getNombre() + " " + cliente.getApellido_pat() + " " + cliente.getApellido_mat()));
+            document.add(new Paragraph("Cliente: " + cliente.getNombre() + " " + cliente.getApellidoPat() + " " + cliente.getApellidoMat()));
             document.add(new Paragraph("DNI: " + cliente.getDNI()));
             if (tipoComprobante.equals("FACTURA")) {
                 document.add(new Paragraph("RUC: " + cliente.getRUC()));
