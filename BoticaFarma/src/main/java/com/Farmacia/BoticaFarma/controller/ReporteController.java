@@ -1,89 +1,76 @@
 package com.Farmacia.BoticaFarma.controller;
 
-import com.Farmacia.BoticaFarma.dto.UsuarioDTO;
-import com.Farmacia.BoticaFarma.dto.ClienteDTO;
-import com.Farmacia.BoticaFarma.service.UsuarioService;
-import com.Farmacia.BoticaFarma.service.ClienteService;
+import com.Farmacia.BoticaFarma.dto.ReporteVentaDTO;
+import com.Farmacia.BoticaFarma.service.ReporteService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/boticafarma/reportes") // Ruta específica para reportes
 @CrossOrigin(origins = "http://localhost:5173")
 public class ReporteController {
 
     @Autowired
-    private UsuarioService usuarioService;
+    private ReporteService reporteService;
 
-    @Autowired
-    private ClienteService clienteService;
+    // ==========================================
+    //      1. ENDPOINTS PARA GRÁFICOS (JSON)
+    // ==========================================
 
-    // ============ USUARIOS DEL SISTEMA (Solo ADMIN) ============
-
-    @GetMapping("/lista")
+    @GetMapping("/mensuales/json")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
-        List<UsuarioDTO> usuarios = usuarioService.listarTodos();
-        return ResponseEntity.ok(usuarios);
+    public ResponseEntity<List<ReporteVentaDTO>> obtenerDatosGraficoMensual() {
+        return ResponseEntity.ok(reporteService.obtenerDatosVentasMensuales());
     }
 
-    @PostMapping("/crear")
+    @GetMapping("/diarias/json")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UsuarioDTO> crearUsuario(@RequestBody UsuarioDTO usuarioDTO) {
-        UsuarioDTO nuevoUsuario = usuarioService.crear(usuarioDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
+    public ResponseEntity<List<ReporteVentaDTO>> obtenerDatosGraficoDiario() {
+        return ResponseEntity.ok(reporteService.obtenerDatosVentasDiarias());
     }
 
-    @PutMapping("/actualizar/{id}")
+    // ==========================================
+    //      2. ENDPOINTS PARA PDF (Descargas)
+    // ==========================================
+
+    @GetMapping("/mensuales/pdf")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UsuarioDTO> actualizarUsuario(
-            @PathVariable Integer id,
-            @RequestBody UsuarioDTO usuarioDTO) {
-        UsuarioDTO actualizado = usuarioService.actualizar(id, usuarioDTO);
-        return ResponseEntity.ok(actualizado);
+    public ResponseEntity<InputStreamResource> descargarPdfMensual() {
+        ByteArrayInputStream bis = reporteService.generarReporteVentasPdf();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=reporte_ventas_mensual.pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
     }
 
-    @DeleteMapping("/eliminar/{id}")
+    @GetMapping("/diarias/pdf")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> eliminarUsuario(@PathVariable Integer id) {
-        usuarioService.eliminar(id);
-        return ResponseEntity.noContent().build();
-    }
+    public ResponseEntity<InputStreamResource> descargarPdfDiario() {
+        ByteArrayInputStream bis = reporteService.generarReporteVentasDiariasPdf();
 
-    // ============ CLIENTES (ADMIN y FARMACEUTICO) ============
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=reporte_ventas_diario.pdf");
 
-    @GetMapping("/clientes")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FARMACEUTICO')")
-    public ResponseEntity<List<ClienteDTO>> listarClientes() {
-        List<ClienteDTO> clientes = clienteService.listarTodos();
-        return ResponseEntity.ok(clientes);
-    }
-
-    @PostMapping("/clientes/crear")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FARMACEUTICO')")
-    public ResponseEntity<ClienteDTO> crearCliente(@RequestBody ClienteDTO clienteDTO) {
-        ClienteDTO nuevoCliente = clienteService.crear(clienteDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoCliente);
-    }
-
-    @PutMapping("/clientes/actualizar/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FARMACEUTICO')")
-    public ResponseEntity<ClienteDTO> actualizarCliente(
-            @PathVariable Integer id,
-            @RequestBody ClienteDTO clienteDTO) {
-        ClienteDTO actualizado = clienteService.actualizar(id, clienteDTO);
-        return ResponseEntity.ok(actualizado);
-    }
-
-    @DeleteMapping("/clientes/eliminar/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FARMACEUTICO')")
-    public ResponseEntity<Void> eliminarCliente(@PathVariable Integer id) {
-        clienteService.eliminar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
     }
 }

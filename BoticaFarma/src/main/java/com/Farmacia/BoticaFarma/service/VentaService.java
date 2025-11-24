@@ -285,7 +285,7 @@ public class VentaService {
     // Obtener una venta por ID
     @Transactional(readOnly = true)
     public Venta obtenerVentaPorId(Integer idVenta) {
-        return ventaRepository.findById(idVenta)
+        return ventaRepository.findById(Long.valueOf(idVenta))
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
     }
 
