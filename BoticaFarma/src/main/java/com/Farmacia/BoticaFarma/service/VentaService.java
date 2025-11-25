@@ -147,11 +147,11 @@ public class VentaService {
             cliente = new Cliente();
             cliente.setNombre(clienteDTO.getNombre());
 
-            cliente.setApellido_pat(clienteDTO.getApellidoPat());
-            cliente.setApellido_mat(clienteDTO.getApellidoMat());
+            cliente.setApellidoPat(clienteDTO.getApellidoPat());
+            cliente.setApellidoMat(clienteDTO.getApellidoMat());
             cliente.setDNI(Integer.parseInt(clienteDTO.getDni()));
             if (clienteDTO.getRuc() != null && !clienteDTO.getRuc().trim().isEmpty()) {
-                cliente.setRUC(Integer.parseInt(clienteDTO.getRuc()));
+                cliente.setRUC((long) Integer.parseInt(clienteDTO.getRuc()));
             }
             cliente = clienteRepository.save(cliente);
         }
@@ -285,7 +285,7 @@ public class VentaService {
     // Obtener una venta por ID
     @Transactional(readOnly = true)
     public Venta obtenerVentaPorId(Integer idVenta) {
-        return ventaRepository.findById(idVenta)
+        return ventaRepository.findById(Long.valueOf(idVenta))
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
     }
 

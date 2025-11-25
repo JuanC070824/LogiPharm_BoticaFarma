@@ -1,13 +1,19 @@
 package com.Farmacia.BoticaFarma.controller;
 
 import com.Farmacia.BoticaFarma.model.Detalle_venta;
+import com.Farmacia.BoticaFarma.dto.ReporteVentaDTO;
 import com.Farmacia.BoticaFarma.model.Venta;
 import com.Farmacia.BoticaFarma.service.VentaService;
+import com.Farmacia.BoticaFarma.service.ReporteService; // <--- Importante
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource; // <--- Para el PDF
+import org.springframework.http.HttpHeaders;          // <--- Para el PDF
+import org.springframework.http.MediaType;            // <--- Para el PDF
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,18 +26,71 @@ public class VentaController {
     @Autowired
     private VentaService ventaService;
 
-    // Procesar una venta
+    @Autowired
+    private ReporteService reporteService; // Inyectamos el servicio de reportes
+
+    // ==========================================
+    //      ZONA DE REPORTES (¡NUEVO!)
+    // ==========================================
+
+    // 1. JSON para Gráficos (Mensual y Diario)
+    @GetMapping("/mensuales/json")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReporteVentaDTO>> obtenerDatosGraficoMensual() {
+        return ResponseEntity.ok(reporteService.obtenerDatosVentasMensuales());
+    }
+
+    @GetMapping("/diarias/json")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReporteVentaDTO>> obtenerDatosGraficoDiario() {
+        return ResponseEntity.ok(reporteService.obtenerDatosVentasDiarias());
+    }
+
+    // 2. Descarga de PDFs (Mensual y Diario)
+    @GetMapping("/mensuales/pdf")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InputStreamResource> descargarPdfMensual() {
+        ByteArrayInputStream bis = reporteService.generarReporteVentasPdf();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=reporte_ventas_mensual.pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
+    }
+
+    @GetMapping("/diarias/pdf")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InputStreamResource> descargarPdfDiario() {
+        // Llamamos al método DIARIO del servicio
+        ByteArrayInputStream bis = reporteService.generarReporteVentasDiariasPdf();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=reporte_ventas_diario.pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(bis));
+    }
+
+    // ==========================================
+    //      ZONA DE GESTIÓN DE VENTAS (Existente)
+    // ==========================================
+
     @PostMapping
     public ResponseEntity<Map<String, Object>> procesarVenta(@RequestBody VentaService.VentaDTO ventaDTO) {
         try {
             Venta venta = ventaService.procesarVenta(ventaDTO);
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Venta procesada correctamente");
             response.put("venta", venta);
             response.put("idVenta", venta.getIdVenta());
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -41,16 +100,13 @@ public class VentaController {
         }
     }
 
-    // Listar todas las ventas
     @GetMapping
     public ResponseEntity<Map<String, Object>> listarVentas() {
         try {
             List<Venta> ventas = ventaService.listarVentas();
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("ventas", ventas);
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -60,18 +116,15 @@ public class VentaController {
         }
     }
 
-    // Obtener detalle de una venta específica
     @GetMapping("/{idVenta}")
     public ResponseEntity<Map<String, Object>> obtenerVenta(@PathVariable Integer idVenta) {
         try {
             Venta venta = ventaService.obtenerVentaPorId(idVenta);
             List<Detalle_venta> detalles = ventaService.obtenerDetallesVenta(idVenta);
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("venta", venta);
             response.put("detalles", detalles);
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();

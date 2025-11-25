@@ -6,11 +6,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-
-
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Digits;
 
 @Entity
-@Table(name="Cliente")
+@Table(name="cliente")
 public class Cliente {
 
     @Id
@@ -18,31 +20,35 @@ public class Cliente {
     @Column(name="idCliente")
     private int idCliente;
 
-    @NotBlank
+    @NotBlank(message = "El nombre es obligatorio")
     @Column(name="nombre")
     private String nombre;
 
-    @NotBlank
+    @NotBlank(message = "El apellido paterno es obligatorio")
     @Column(name="apellido_pat")
-    private String apellido_pat;
+    private String apellidoPat;
 
-    @NotBlank
+    @NotBlank(message = "El apellido materno es obligatorio")
     @Column(name="apellido_mat")
-    private String apellido_mat;
+    private String apellidoMat;
 
-    @NotBlank
-    @Column(name="DNI",length=8,nullable = false)
+    @NotNull(message = "El DNI es obligatorio")
+    @Min(value = 10000000, message = "El DNI debe tener 8 dígitos")
+    @Max(value = 99999999, message = "El DNI debe tener 8 dígitos")
+    @Column(name="DNI")
     private int DNI;
 
-    @NotBlank
-    @Column(name="RUC",length=11)
-    private Integer RUC;
-
+    // RUC es opcional pero si se ingresa debe tener 11 dígitos
+    @Min(value = 10000000000L, message = "El RUC debe tener 11 dígitos")
+    @Max(value = 99999999999L, message = "El RUC debe tener 11 dígitos")
+    @Column(name="RUC")
+    private Long RUC;  // ← CAMBIO: Long en lugar de Integer
 
     public Cliente(){
-        //VACIOOOOOOO
+        // Constructor vacío
     }
-    //GETTERS Y SETTERS
+
+    // GETTERS Y SETTERS
     public int getIdCliente() {
         return idCliente;
     }
@@ -59,20 +65,20 @@ public class Cliente {
         this.nombre = nombre;
     }
 
-    public String getApellido_pat() {
-        return apellido_pat;
+    public String getApellidoPat() {
+        return apellidoPat;
     }
 
-    public void setApellido_pat(String apellido_pat) {
-        this.apellido_pat = apellido_pat;
+    public void setApellidoPat(String apellidoPat) {
+        this.apellidoPat = apellidoPat;
     }
 
-    public String getApellido_mat() {
-        return apellido_mat;
+    public String getApellidoMat() {
+        return apellidoMat;
     }
 
-    public void setApellido_mat(String apellido_mat) {
-        this.apellido_mat = apellido_mat;
+    public void setApellidoMat(String apellidoMat) {
+        this.apellidoMat = apellidoMat;
     }
 
     public int getDNI() {
@@ -83,6 +89,11 @@ public class Cliente {
         this.DNI = DNI;
     }
 
-    public Integer getRUC() { return RUC; }
-    public void setRUC(Integer RUC) { this.RUC = RUC; }
+    public Long getRUC() {
+        return RUC;
+    }
+
+    public void setRUC(Long RUC) {
+        this.RUC = RUC;
+    }
 }
