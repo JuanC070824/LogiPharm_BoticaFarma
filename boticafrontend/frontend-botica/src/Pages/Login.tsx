@@ -114,9 +114,10 @@ const Login = () => {
             )}
             
             {/* Forgot Password */}
+            
             <div className="text-right text-sm">
               <a href="#" className="text-white hover:text-white/80 transition-colors">
-                          Olvidaste tu contraseña?
+                          
               </a>
             </div>
             

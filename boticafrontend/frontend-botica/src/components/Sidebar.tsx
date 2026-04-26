@@ -1,4 +1,4 @@
-import { FileText, Home, Package, ShoppingCart, Truck, Users } from "lucide-react"
+import { FileText, Home, Package, ShoppingCart, Users } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
 export const Sidebar = () => {
@@ -10,7 +10,7 @@ export const Sidebar = () => {
     { path: "/inventario", icon: Package, label: "Inventario" },
     { path: "/reportes", icon: FileText, label: "Reportes" },
     { path: "/usuarios", icon: Users, label: "Usuarios" },
-    { path: "/delivery", icon: Truck, label: "Delivery" },
+    //{ path: "/delivery", icon: Truck, label: "Delivery" },
   ]
 
   return (

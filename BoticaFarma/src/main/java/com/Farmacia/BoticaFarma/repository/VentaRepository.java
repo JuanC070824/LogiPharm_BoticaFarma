@@ -1,13 +1,15 @@
 package com.Farmacia.BoticaFarma.repository;
 
-import com.Farmacia.BoticaFarma.model.Venta;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import java.util.List;
+
+import com.Farmacia.BoticaFarma.model.Venta;
 
 @Repository
-public interface VentaRepository extends JpaRepository<Venta, Long> {
+public interface VentaRepository extends JpaRepository<Venta, Integer> {
 
     // CAMBIO: Ahora devuelve List<Object[]>
     // Quitamos el "new com.Farmacia..." y dejamos solo los datos

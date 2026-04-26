@@ -31,6 +31,14 @@ public class Venta {
     @Column(name="metodopago")
     private Metodopago metodopago;
 
+    //Esto me sirve para el metodo de delivery
+    @Column(name = "tipo_venta")
+    @Enumerated(EnumType.STRING)
+    private TipoVenta tipoVenta;
+    public enum TipoVenta {
+        MOSTRADOR, DELIVERY
+    }
+
     public Venta() {
         //VACIO
     }

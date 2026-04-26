@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Package, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/authService';
-
 // 1. IMPORTAR EL COMPONENTE
 import ReporteCard from '../components/ReporteCard'; // <--- NUEVO: Ajusta la ruta si es necesario
 
@@ -20,30 +19,30 @@ const Dashboard = () => {
     // ... (Tus estadísticas se quedan igual)
     {
       title: "Ventas Hoy",
-      value: "S/ 2,450.00",
+      value: "S/ 750.00",
       icon: DollarSign,
       change: "+12.5%",
       changeType: "positive" as const,
     },
     {
       title: "Productos en Stock",
-      value: "1,245",
+      value: "429",
       icon: Package,
       change: "-5 productos",
       changeType: "neutral" as const,
     },
     {
       title: "Clientes Registrados",
-      value: "328",
+      value: "3",
       icon: Users,
-      change: "+18 este mes",
+      change: "+3 este mes",
       changeType: "positive" as const,
     },
     {
       title: "Ventas del Mes",
-      value: "S/ 45,890.00",
+      value: "S/ 810.30",
       icon: TrendingUp,
-      change: "+23.1%",
+      //change: "+23.1%",
       changeType: "positive" as const,
     },
   ];
@@ -107,9 +106,9 @@ const Dashboard = () => {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { name: "Paracetamol 500mg", stock: 15, status: "Bajo stock" },
-                  { name: "Amoxicilina 250mg", stock: 8, status: "Bajo stock" },
-                  { name: "Ibuprofeno 400mg", stock: 3, status: "Crítico" },
+                  { name: "Ensure Nutricional 400g", stock: 10, status: "Bajo stock" },
+                  { name: "Listerine Cool Mint 500ml", stock: 0, status: "Sin stock" },
+                  { name: "Cetaphil Crema Hidratante 250ml", stock: 0, status: "Sin Stock" },
                 ].map((product, index) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
                     <div>
@@ -136,7 +135,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { action: "Nueva venta registrada", time: "Hace 5 minutos", amount: "S/ 125.00" },
+                  { action: "Nueva venta registrada", time: "Hace 5 minutos", amount: "S/ 750.00" },
                   { action: "Producto agregado", time: "Hace 15 min", amount: null }, // Acorté el texto para que quepa mejor
                   { action: "Cliente registrado", time: "Hace 1 hora", amount: null },
                   { action: "Venta completada", time: "Hace 2 horas", amount: "S/ 89.50" },

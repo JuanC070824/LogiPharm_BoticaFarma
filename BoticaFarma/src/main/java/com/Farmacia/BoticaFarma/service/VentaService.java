@@ -1,14 +1,29 @@
 package com.Farmacia.BoticaFarma.service;
 
-import com.Farmacia.BoticaFarma.model.*;
-import com.Farmacia.BoticaFarma.repository.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.Farmacia.BoticaFarma.model.Cliente;
+import com.Farmacia.BoticaFarma.model.DetalleVentaLote;
+import com.Farmacia.BoticaFarma.model.Detalle_venta;
+import com.Farmacia.BoticaFarma.model.EstadoLote;
+import com.Farmacia.BoticaFarma.model.Lote;
+import com.Farmacia.BoticaFarma.model.Metodopago;
+import com.Farmacia.BoticaFarma.model.Producto;
+import com.Farmacia.BoticaFarma.model.Usuario;
+import com.Farmacia.BoticaFarma.model.Venta;
+import com.Farmacia.BoticaFarma.repository.ClienteRepository;
+import com.Farmacia.BoticaFarma.repository.DetalleVentaLoteRepository;
+import com.Farmacia.BoticaFarma.repository.DetalleVentaRepository;
+import com.Farmacia.BoticaFarma.repository.LoteRepository;
+import com.Farmacia.BoticaFarma.repository.ProductoRepository;
+import com.Farmacia.BoticaFarma.repository.UsuarioRepository;
+import com.Farmacia.BoticaFarma.repository.VentaRepository;
 
 @Service
 public class VentaService {
@@ -61,6 +76,8 @@ public class VentaService {
         private List<DetalleVentaDTO> detalles;
         private String tipoComprobante; // "BOLETA" o "FACTURA"
         private ClienteDTO cliente;
+        private String tipoVenta;
+        private DeliveryDTO delivery;
         // Getters y setters
         public Integer getIdUsuario() { return idUsuario; }
         public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
@@ -73,6 +90,22 @@ public class VentaService {
         }
         public ClienteDTO getCliente() { return cliente; }
         public void setCliente(ClienteDTO cliente) { this.cliente = cliente; }
+    }
+    public static class DeliveryDTO {
+        private Integer idRepartidor;
+        private BigDecimal distanciaKm;
+        private BigDecimal costoEnvio;
+        private String linkCliente;
+
+        // Getters y setters
+        public Integer getIdRepartidor() { return idRepartidor; }
+        public void setIdRepartidor(Integer idRepartidor) { this.idRepartidor = idRepartidor; }
+        public BigDecimal getDistanciaKm() { return distanciaKm; }
+        public void setDistanciaKm(BigDecimal distanciaKm) { this.distanciaKm = distanciaKm; }
+        public BigDecimal getCostoEnvio() { return costoEnvio; }
+        public void setCostoEnvio(BigDecimal costoEnvio) { this.costoEnvio = costoEnvio; }
+        public String getLinkCliente() { return linkCliente; }
+        public void setLinkCliente(String linkCliente) { this.linkCliente = linkCliente; }
     }
     public static class ClienteDTO {
         private Integer idCliente;
@@ -161,7 +194,7 @@ public class VentaService {
         }
 
 
-        // 3. Crear la venta (sin total aún)
+
         Venta venta = new Venta();
         venta.setUsuario(usuario);
         venta.setFecha(LocalDateTime.now());
@@ -170,7 +203,7 @@ public class VentaService {
 
         Venta ventaGuardada = ventaRepository.save(venta);
 
-        // 4. Procesar cada detalle
+
         BigDecimal totalVenta = BigDecimal.ZERO;
 
         for (DetalleVentaDTO detalleDTO : ventaDTO.getDetalles()) {
@@ -186,12 +219,12 @@ public class VentaService {
             BigDecimal subtotal = detalleDTO.getPrecioUnitario()
                     .multiply(new BigDecimal(detalleDTO.getCantidad()));
 
-            // Crear detalle de venta
+            //Crear detalle de venta
             Detalle_venta detalleVenta = new Detalle_venta();
             detalleVenta.setVenta(ventaGuardada);
             detalleVenta.setProducto(producto);
 
-            detalleVenta.setCliente(cliente);// Opcional, si no manejas clientes aún
+            detalleVenta.setCliente(cliente);
             detalleVenta.setCantidad(detalleDTO.getCantidad());
             detalleVenta.setPrecio_unitario(detalleDTO.getPrecioUnitario());
             detalleVenta.setSubtotal(subtotal);
@@ -285,7 +318,7 @@ public class VentaService {
     // Obtener una venta por ID
     @Transactional(readOnly = true)
     public Venta obtenerVentaPorId(Integer idVenta) {
-        return ventaRepository.findById(Long.valueOf(idVenta))
+        return ventaRepository.findById(idVenta)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
     }
 

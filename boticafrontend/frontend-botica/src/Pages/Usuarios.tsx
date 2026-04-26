@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const API_URL = 'http://localhost:8080/api/usuarios';
 
@@ -110,27 +110,37 @@ export default function Usuarios() {
     setModalOpen(true);
   };
 
-  const guardarUsuario = async () => {
-    try {
-      const url = editingId ? `${API_URL}/actualizar/${editingId}` : `${API_URL}/crear`;
-      const method = editingId ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        ...getAuthHeaders(),
-        body: JSON.stringify(usuarioForm)
-      });
-
-      if (!response.ok) throw new Error('Error en la petición');
-      
-      alert(editingId ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
-      cargarUsuarios();
-      setModalOpen(false);
-    } catch (error) {
-      alert('Error al guardar usuario');
-      console.error(error);
+const guardarUsuario = async () => {
+  try {
+    // AGREGAR: Preparar datos - si es REPARTIDOR, llenar campos dummy
+    let datosAEnviar = usuarioForm;
+    if (usuarioForm.rol === 'REPARTIDOR') {
+      datosAEnviar = {
+        ...usuarioForm,
+        username: 'dummy', // Backend generará UUID real
+        password: 'dummy'  // Backend generará contraseña real
+      };
     }
-  };
+
+    const url = editingId ? `${API_URL}/actualizar/${editingId}` : `${API_URL}/crear`;
+    const method = editingId ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method,
+      ...getAuthHeaders(),
+      body: JSON.stringify(datosAEnviar) 
+    });
+
+    if (!response.ok) throw new Error('Error en la petición');
+    
+    alert(editingId ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
+    cargarUsuarios();
+    setModalOpen(false);
+  } catch (error) {
+    alert('Error al guardar usuario');
+    console.error(error);
+  }
+};
 
   const eliminarUsuario = async (id: number) => {
     if (!confirm('¿Está seguro de eliminar este usuario?')) return;
@@ -396,88 +406,106 @@ export default function Usuarios() {
               {editingId ? 'Editar' : 'Nuevo'} {modalType === 'usuario' ? 'Usuario' : 'Cliente'}
             </h3>
 
-            {modalType === 'usuario' ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                  <input
-                    type="text"
-                    placeholder="Nombre"
-                    className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={usuarioForm.nombre}
-                    onChange={(e) => setUsuarioForm({...usuarioForm, nombre: e.target.value})}
-                  />
+              {modalType === 'usuario' ? (
+                <div className="space-y-4">
+                  {/*ORDEN CORRECTO - PRIMERO: Datos personales */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={usuarioForm.nombre}
+                      onChange={(e) => setUsuarioForm({...usuarioForm, nombre: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Paterno</label>
+                    <input
+                      type="text"
+                      placeholder="Apellido Paterno"
+                      className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={usuarioForm.apat}
+                      onChange={(e) => setUsuarioForm({...usuarioForm, apat: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Materno</label>
+                    <input
+                      type="text"
+                      placeholder="Apellido Materno"
+                      className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={usuarioForm.amat}
+                      onChange={(e) => setUsuarioForm({...usuarioForm, amat: e.target.value})}
+                    />
+                  </div>
+
+                  {/*SEGUNDO: Rol selector */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                    <select
+                      className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={usuarioForm.rol}
+                      onChange={(e) => setUsuarioForm({...usuarioForm, rol: e.target.value})}
+                    >
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="FARMACEUTICO">FARMACEUTICO</option>
+                      <option value="REPARTIDOR">REPARTIDOR</option>
+                    </select>
+                  </div>
+
+                  {/*TERCERO: Condicional - Username/Password SOLO si NO es REPARTIDOR */}
+                  {usuarioForm.rol !== 'REPARTIDOR' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input
+                          type="text"
+                          placeholder="Username"
+                          className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={usuarioForm.username}
+                          onChange={(e) => setUsuarioForm({...usuarioForm, username: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Contraseña {editingId && '(dejar vacío para no cambiar)'}
+                        </label>
+                        <input
+                          type="password"
+                          placeholder="Contraseña"
+                          className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={usuarioForm.password}
+                          onChange={(e) => setUsuarioForm({...usuarioForm, password: e.target.value})}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/*CUARTO: Nota si es REPARTIDOR */}
+                  {usuarioForm.rol === 'REPARTIDOR' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                      Username y contraseña se generan automáticamente para Repartidores
+                    </div>
+                  )}
+
+                  {/* BOTONES al final */}
+                  <div className="flex space-x-2 pt-4">
+                    <button
+                      onClick={guardarUsuario}
+                      className="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 font-medium"
+                    >
+                      {editingId ? 'Actualizar' : 'Crear'}
+                    </button>
+                    <button
+                      onClick={() => setModalOpen(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 font-medium"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Paterno</label>
-                  <input
-                    type="text"
-                    placeholder="Apellido Paterno"
-                    className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={usuarioForm.apat}
-                    onChange={(e) => setUsuarioForm({...usuarioForm, apat: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Materno</label>
-                  <input
-                    type="text"
-                    placeholder="Apellido Materno"
-                    className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={usuarioForm.amat}
-                    onChange={(e) => setUsuarioForm({...usuarioForm, amat: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                  <input
-                    type="text"
-                    placeholder="Username"
-                    className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={usuarioForm.username}
-                    onChange={(e) => setUsuarioForm({...usuarioForm, username: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contraseña {editingId && '(dejar vacío para no cambiar)'}
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Contraseña"
-                    className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={usuarioForm.password}
-                    onChange={(e) => setUsuarioForm({...usuarioForm, password: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                  <select
-                    className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={usuarioForm.rol}
-                    onChange={(e) => setUsuarioForm({...usuarioForm, rol: e.target.value})}
-                  >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="FARMACEUTICO">FARMACEUTICO</option>
-                    <option value="ALMACENERO">ALMACENERO</option>
-                  </select>
-                </div>
-                <div className="flex space-x-2 pt-4">
-                  <button
-                    onClick={guardarUsuario}
-                    className="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 font-medium"
-                  >
-                    {editingId ? 'Actualizar' : 'Crear'}
-                  </button>
-                  <button
-                    onClick={() => setModalOpen(false)}
-                    className="flex-1 bg-gray-300 text-gray-700 p-2 rounded hover:bg-gray-400 font-medium"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
+              ) : (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>

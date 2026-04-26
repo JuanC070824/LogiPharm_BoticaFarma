@@ -25,6 +25,17 @@ interface ClienteData {
   dni: string;
   ruc: string;
 }
+//LINK SUPREMO BOTICA FARMA
+const BOTICA_LINK = "https://www.google.com/maps/place/Botica+Farma,+Av.+Universitaria+653,+San+Mart%C3%ADn+de+Porres+15103/data=!4m2!3m1!1s0x9105ceea709046fb:0xc883af3a0c47d2cf?utm_source=mstt_1&entry=gps";
+
+const extraerCoordenadas = (link: string): string | null => {
+  const match = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (match) {
+    return `${match[1]},${match[2]}`;
+  }
+  return null;
+};
+
 
 const Ventas = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +44,7 @@ const Ventas = () => {
   const [loading, setLoading] = useState(false);
   const [metodoPago, setMetodoPago] = useState<string>("EFECTIVO");
   const [processingVenta, setProcessingVenta] = useState(false);
-  
+  const [repartidores, setRepartidores] = useState<any[]>([]);
   // NUEVOS ESTADOS
   const [tipoCliente, setTipoCliente] = useState<string>("COMUN");
   const [tipoComprobante, setTipoComprobante] = useState<string>("BOLETA");
@@ -45,10 +56,42 @@ const Ventas = () => {
     ruc: ""
   });
 
+  const [tipoVenta, setTipoVenta] = useState<string>("MOSTRADOR");
+  const [mostrarModalDelivery, setMostrarModalDelivery] = useState(false);
+  const [deliveryData, setDeliveryData] = useState({
+    idRepartidor: "",
+    distanciaKm: 0,
+    costoEnvio: 0,
+    linkCliente: ""   // Nuevo campo para link de ubicación del cliente
+  });
+  const [qrCode, setQrCode] = useState<string>("");
+
   useEffect(() => {
     cargarProductos();
   }, []);
 
+  useEffect(() => {
+  cargarRepartidores();
+}, []);
+
+
+const cargarRepartidores = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/usuarios/lista', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const usuarios = await response.json();
+    // Filtrar solo REPARTIDORES
+    const reps = usuarios.filter((u: any) => u.rol === 'REPARTIDOR');
+    setRepartidores(reps);
+  } catch (error) {
+    console.error("Error al cargar repartidores:", error);
+  }
+};
   const cargarProductos = async () => {
     setLoading(true);
     try {
@@ -137,9 +180,9 @@ const Ventas = () => {
     setCart(cart.filter(item => item.idProducto !== idProducto));
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
-  const igv = subtotal * 0.18;
-  const total = subtotal + igv;
+const total = cart.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+const subtotal = total / 1.18;
+const igv = total - subtotal;
 
   const processSale = async () => {
     if (cart.length === 0) {
@@ -193,7 +236,9 @@ const Ventas = () => {
         idUsuario: parseInt(userId),
         metodoPago: metodoPago,
         tipoComprobante: tipoComprobante,
+        tipoVenta: tipoVenta,
         cliente: clientePayload,
+        delivery: tipoVenta === "DELIVERY" ? deliveryData : null, // Datos de delivery si aplica
         detalles: cart.map(item => ({
           idProducto: item.idProducto,
           cantidad: item.quantity,
@@ -216,6 +261,15 @@ const Ventas = () => {
         });
         setTipoCliente("COMUN");
         setTipoComprobante("BOLETA");
+          setTipoVenta("MOSTRADOR");
+          setDeliveryData({
+            idRepartidor: "",
+            distanciaKm: 0,
+            costoEnvio: 0,
+            linkCliente: ""
+          });
+          setQrCode("");
+          setMostrarModalDelivery(false); 
         cargarProductos(); // Recargar para actualizar stocks
       } else {
         toast.error("Error al procesar la venta")
@@ -297,7 +351,41 @@ const Ventas = () => {
             <CardTitle>Detalle de Venta</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* NUEVO: Tipo de Cliente */}
+            {/*Tipo de Cliente */}
+            <div>
+              <label className="block text-sm font-medium mb-3">Tipo de Venta:</label>
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoVenta"
+                    value="MOSTRADOR"
+                    checked={tipoVenta === "MOSTRADOR"}
+                    onChange={(e) => {
+                      setTipoVenta(e.target.value);
+                      setMostrarModalDelivery(false);
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Mostrador</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoVenta"
+                    value="DELIVERY"
+                    checked={tipoVenta === "DELIVERY"}
+                    onChange={(e) => {
+                      setTipoVenta(e.target.value);
+                      setMostrarModalDelivery(true);
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Delivery</span>
+                </label>
+              </div>
+            </div>
+            {/*Tipo de Cliente */}
             <div>
               <label className="block text-sm font-medium mb-2">Tipo de Cliente:</label>
               <select
@@ -481,6 +569,131 @@ const Ventas = () => {
           </CardContent>
         </Card>
       </div>
+      {/*Modal Delivery */}
+      {mostrarModalDelivery && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-96 p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Datos del Delivery</h3>
+              <button 
+                onClick={() => setMostrarModalDelivery(false)} 
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Repartidor */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Repartidor:</label>
+                <select
+                  value={deliveryData.idRepartidor}
+                  onChange={(e) => setDeliveryData({...deliveryData, idRepartidor: e.target.value})}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">Seleccionar repartidor</option>
+                    {repartidores.map((rep: any) => (
+                        <option key={rep.idUsuario} value={rep.idUsuario}>
+                          {rep.nombreCompleto}
+                        </option>
+                      ))}
+                </select>
+              </div>
+
+              {/* Distancia */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Distancia (km):</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={deliveryData.distanciaKm}
+                  onChange={(e) => setDeliveryData({...deliveryData, distanciaKm: parseFloat(e.target.value) || 0})}
+                  placeholder="0.0"
+                />
+              </div>
+
+              {/* Costo Envío */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Costo Envío (S/):</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={deliveryData.costoEnvio}
+                  onChange={(e) => setDeliveryData({...deliveryData, costoEnvio: parseFloat(e.target.value) || 0})}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Link Ubicación Cliente (Google Maps):</label>
+                <textarea
+                  value={deliveryData.linkCliente || ""}
+                  onChange={(e) => setDeliveryData({...deliveryData, linkCliente: e.target.value})}
+                  placeholder="Pega aquí el link de Google Maps del cliente"
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  rows={3}
+                />
+              </div>
+              {/* Botón Generar QR */}
+              <Button
+                onClick={() => {
+                  if (!deliveryData.idRepartidor || deliveryData.distanciaKm === 0 || !deliveryData.linkCliente) {
+                    toast.error("Completa todos los datos (repartidor, distancia y link cliente)");
+                    return;
+                  }
+                  
+                  const coordsCliente = extraerCoordenadas(deliveryData.linkCliente);
+                  if (!coordsCliente) {
+                    toast.error("Link inválido. Debe contener coordenadas (@lat,lng)");
+                    return;
+                  }
+                  const rutaLink = `https://www.google.com/maps/dir/?api=1&destination=${coordsCliente}`;
+                  
+                  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(rutaLink)}`;
+                  setQrCode(qrUrl);
+                  toast.success("QR generado correctamente");
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                Generar QR
+              </Button>
+
+              {/* QR Mostrado */}
+              {qrCode && (
+                <div className="p-4 bg-gray-50 rounded-lg border text-center">
+                  <h4 className="font-medium mb-3">QR Generado:</h4>
+                  <img src={qrCode} alt="QR Code" className="w-40 h-40 mx-auto" />
+                  <p className="text-xs text-gray-500 mt-2">Escanea con el repartidor</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      const link = document.createElement("a");
+                      link.href = qrCode;
+                      link.download = "qr-delivery.png";
+                      link.click();
+                    }}
+                  >
+                    Descargar QR
+                  </Button>
+                </div>
+              )}
+
+              {/* Botón Cerrar */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setMostrarModalDelivery(false)}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

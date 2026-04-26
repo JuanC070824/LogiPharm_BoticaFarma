@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,8 +57,20 @@ public class UsuarioService {
         usuario.setNombre(dto.getNombre());
         usuario.setApat(dto.getApat());
         usuario.setAmat(dto.getAmat());
-        usuario.setUsername(dto.getUsername());
-        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        Rol rol = Rol.valueOf(dto.getRol());
+        if (rol == Rol.REPARTIDOR) {
+            String usernameAuto = "REP_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            usuario.setUsername(usernameAuto);
+
+            // Contraseña dummy (nunca se usa, pero es requerida en la BD)
+            String passwordDummy = UUID.randomUUID().toString();
+            usuario.setPassword(passwordEncoder.encode(passwordDummy));
+        }else{
+            usuario.setUsername(dto.getUsername());
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
         // Convertir String a ENUM
         usuario.setRol(Rol.valueOf(dto.getRol()));
 
@@ -72,15 +85,22 @@ public class UsuarioService {
         usuario.setNombre(dto.getNombre());
         usuario.setApat(dto.getApat());
         usuario.setAmat(dto.getAmat());
-        usuario.setUsername(dto.getUsername());
-        // Convertir String a ENUM
-        usuario.setRol(Rol.valueOf(dto.getRol()));
 
-        // Solo actualizar contraseña si se proporciona una nueva
-        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
-            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        Rol rol = Rol.valueOf(dto.getRol());
+
+        if(rol==Rol.REPARTIDOR){
+            //No se puede cambiar el username de un repartidor
+        }else{
+            usuario.setUsername(dto.getUsername());
+
+
+            // Solo actualizar contraseña si se proporciona una nueva
+            if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+                usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+            }
         }
 
+        usuario.setRol(Rol.valueOf(dto.getRol()));
         Usuario actualizado = usuarioRepository.save(usuario);
         return convertirADTO(actualizado);
     }
