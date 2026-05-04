@@ -15,24 +15,35 @@ import Reportes from "./Pages/Reportes";
 import Usuarios from "./Pages/Usuarios";
 import Ventas from "./Pages/Ventas";
 import './index.css';
+import logofarma from "./assets/logofarma.png";
 const queryClient = new QueryClient();
 // Componente para proteger rutas
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
-  
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 // Layout principal con Sidebar y Header
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-background relative overflow-hidden">
+
+      {/* MARCA DE AGUA GLOBAL */}
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none z-0 opacity-[0.03] ml-64">
+        <img
+          src={logofarma}
+          alt="Watermark"
+          className="w-[400px] md:w-[600px] object-contain grayscale"
+        />
+      </div>
+
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col relative z-10">
         <Header />
         <main className="flex-1 overflow-auto">
           {children}
@@ -51,7 +62,7 @@ const App = () => (
         <Routes>
           {/* Ruta pública - Login */}
           <Route path="/login" element={<Login />} />
-          
+
           {/* Rutas protegidas con Layout */}
           <Route
             path="/dashboard"
@@ -113,10 +124,10 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-          
+
           {/* Redireccionar raíz a login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-          
+
           {/* Página 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
