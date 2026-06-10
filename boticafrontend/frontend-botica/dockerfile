@@ -1,0 +1,25 @@
+# --- Etapa 1: Compilación del Frontend ---
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Copiar archivos de configuración de Node
+COPY package*.json ./
+RUN npm install
+
+# Copiar todo el código fuente (incluyendo tsconfig.json si usas TypeScript)
+COPY . .
+
+# Compilar el proyecto de producción (Vite generará la carpeta 'dist')
+RUN npm run build
+
+# --- Etapa 2: Servidor de producción con Nginx ---
+FROM nginx:1.25-alpine
+
+# Copiar los archivos compilados de Vite (carpeta dist) a Nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Exponer el puerto web estándar
+EXPOSE 80
+
+# Iniciar Nginx
+CMD ["nginx", "-g", "daemon off;"]

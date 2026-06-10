@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/boticafarma")
-@CrossOrigin(origins = "http://localhost:5173") // permite que React acceda, antes era 3000
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 
 public class UsuarioController {
 
