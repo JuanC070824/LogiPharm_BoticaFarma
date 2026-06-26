@@ -89,7 +89,7 @@ CREATE TABLE `usuario` (
   `amat` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `rol` enum('ADMIN','FARMACEUTICO','ALMACENERO') NOT NULL,
+  `rol` enum('ADMIN','FARMACEUTICO','REPARTIDOR') NOT NULL,
   PRIMARY KEY (`idUsuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
