@@ -26,6 +26,13 @@ export const ModalProveedores = ({ open, onClose, onSuccess }: Props) => {
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [email, setEmail] = useState("");
+  const [nombreError, setNombreError] = useState("");
+
+  const nombreValido = (value: string) => {
+    const trimmed = value.trim();
+    const validNameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9\s]+$/;
+    return trimmed.length > 0 && validNameRegex.test(trimmed);
+  };
 
   useEffect(() => {
     if (open) {
@@ -70,11 +77,17 @@ export const ModalProveedores = ({ open, onClose, onSuccess }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!nombreValido(nombre)) {
+      setNombreError("El nombre solo puede contener letras, números y espacios.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const data = {
-        nombreProveedor: nombre,
+        nombreProveedor: nombre.trim(),
         direccion,
         email,
       };
@@ -208,9 +221,15 @@ export const ModalProveedores = ({ open, onClose, onSuccess }: Props) => {
                 </label>
                 <Input
                   value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  onChange={(e) => {
+                    setNombre(e.target.value);
+                    if (nombreError) setNombreError("");
+                  }}
                   required
                 />
+                {nombreError ? (
+                  <p className="text-sm text-red-600 mt-2">{nombreError}</p>
+                ) : null}
               </div>
 
               <div>
