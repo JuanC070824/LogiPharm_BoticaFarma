@@ -19,7 +19,7 @@ public class Categoria {
 
     @NotBlank
     @Column(name = "nombre_categoria")
-    private String nombreCategoria; // ✅ camelCase para JPA
+    private String nombreCategoria; //  camelCase para JPA
 
     public Categoria() {
         // Constructor vacío

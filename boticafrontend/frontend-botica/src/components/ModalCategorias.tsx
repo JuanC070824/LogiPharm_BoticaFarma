@@ -20,6 +20,13 @@ export const ModalCategorias = ({ open, onClose, onSuccess }: Props) => {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [nombreCategoria, setNombreCategoria] = useState("");
+  const [nombreError, setNombreError] = useState("");
+
+  const nombreValido = (value: string) => {
+    const trimmed = value.trim();
+    const validNameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9\s]+$/;
+    return trimmed.length > 0 && validNameRegex.test(trimmed);
+  };
 
   useEffect(() => {
     if (open) {
@@ -44,10 +51,16 @@ export const ModalCategorias = ({ open, onClose, onSuccess }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!nombreValido(nombreCategoria)) {
+      setNombreError("El nombre solo puede contener letras, números y espacios.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const data = { nombre_categoria: nombreCategoria };
+      const data = { nombre_categoria: nombreCategoria.trim() };
       const response = await crearCategoria(data);
 
       if (response.success) {
@@ -164,10 +177,16 @@ export const ModalCategorias = ({ open, onClose, onSuccess }: Props) => {
                 </label>
                 <Input
                   value={nombreCategoria}
-                  onChange={(e) => setNombreCategoria(e.target.value)}
+                  onChange={(e) => {
+                    setNombreCategoria(e.target.value);
+                    if (nombreError) setNombreError("");
+                  }}
                   placeholder="Ej: Analgésicos"
                   required
                 />
+                {nombreError ? (
+                  <p className="text-sm text-red-600 mt-2">{nombreError}</p>
+                ) : null}
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
