@@ -86,7 +86,7 @@ const Login = () => {
             LogiPharm
           </h1>
           <p className="text-white/90 text-center mb-8 text-sm md:text-base">
-            Sistema de gestión para BoticaFarma
+            Sistema de gestión para boticas y farmacias
           </p>
           
           {/* Form */}
