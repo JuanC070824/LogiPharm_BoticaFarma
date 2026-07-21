@@ -16,6 +16,9 @@ public class Lote {
     @ManyToOne
     @JoinColumn(name="idProducto", nullable=false)
     private Producto producto;
+    @ManyToOne
+    @JoinColumn(name = "idAlmacen", nullable = false)
+    private Almacen almacen;
 
     @ManyToOne
     @JoinColumn(name="idCompra", nullable=true)
@@ -44,7 +47,6 @@ public class Lote {
     @Column(name="estado_lote", nullable=false)
     private EstadoLote estadoLote;
 
-
     public Lote(){
         //vacio
     }
@@ -71,6 +73,14 @@ public class Lote {
 
     public Producto getProducto() {
         return producto;
+    }
+
+    public Almacen getAlmacen() {
+        return almacen;
+    }
+
+    public void setAlmacen(Almacen almacen) {
+        this.almacen = almacen;
     }
 
     public void setProducto(Producto producto) {

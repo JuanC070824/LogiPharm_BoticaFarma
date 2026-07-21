@@ -23,4 +23,8 @@ public interface LoteRepository extends JpaRepository<Lote, Integer> {
     @Query("SELECT COUNT(l) FROM Lote l WHERE l.fechaIngreso = :fecha")
     Integer contarLotesPorFecha(@Param("fecha") LocalDate fecha);
 
+    // AÑADIR ESTE MÉTODO
+    @Query("SELECT COALESCE(SUM(l.cantidadActual), 0) FROM Lote l WHERE l.producto.idProducto = :idProducto AND l.almacen.idAlmacen = :idAlmacen")
+    Integer calcularStockPorAlmacen(@Param("idProducto") Integer idProducto, @Param("idAlmacen") Integer idAlmacen);
+
 }

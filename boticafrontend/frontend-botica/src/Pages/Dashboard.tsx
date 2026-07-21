@@ -9,7 +9,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const nombre = localStorage.getItem('nombre');
   const rol = localStorage.getItem('rol');
-
+  const sucursalActiva = localStorage.getItem('sucursalActivaNombre');
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -49,14 +49,18 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-
       {/* Contenido del Dashboard */}
       <div className="p-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
           <h1 className="text-4xl font-bold text-foreground">Panel Principal</h1>
-          {/* Opcional: Botón de Logout aquí si no lo tienes en el Sidebar */}
-          {/* <button onClick={handleLogout} className="text-red-500">Cerrar Sesión</button> */}
+          {/* ============ AÑADIR: nombre de la sede actual ============ */}
+          {sucursalActiva && (
+            <p className="text-muted-foreground mt-1">📍 {sucursalActiva}</p>
+          )}
+          {/* ============ FIN ============ */}
         </div>
+      </div>
 
         {/* SECCIÓN 1: ESTADÍSTICAS (Sin cambios) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

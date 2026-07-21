@@ -31,21 +31,23 @@ const RegisterBotica = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
 
-    try {
-      await registerBotica(formData);
-      alert('Botica registrada con éxito. Ya puedes iniciar sesión.');
-      navigate('/login');
-    } catch (err: any) {
-      setError(err.message || 'Error al registrar la botica');
-    } finally {
-      setLoading(false);
-    }
-  };
+        try {
+        await registerBotica(formData);
+        alert('Botica registrada con éxito. Ya puedes iniciar sesión.');
+        navigate('/login');
+        } catch (err: any) {
+        // Captura el mensaje descriptivo del backend o usa un fallback en caso de error de red
+        const backendMessage = err.response?.data?.message || err.response?.data || err.message;
+        setError(typeof backendMessage === 'string' ? backendMessage : 'Error al registrar la botica');
+        } finally {
+        setLoading(false);
+        }
+    };
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4">

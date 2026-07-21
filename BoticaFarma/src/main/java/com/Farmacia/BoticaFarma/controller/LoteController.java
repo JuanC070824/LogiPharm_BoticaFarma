@@ -26,14 +26,15 @@ public class LoteController {
     @PreAuthorize("hasRole('ADMIN')")
     // Crear lote
     @PostMapping
-    public ResponseEntity<Map<String, Object>> crearLote(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Map<String, Object>> crearLote(
+            @RequestBody Map<String, Object> request) {
         try {
             Integer idProducto = (Integer) request.get("idProducto");
             Integer idUsuario = (Integer) request.get("idUsuario");
+            Integer idAlmacen = (Integer) request.get("idAlmacen");
             Integer cantidad = (Integer) request.get("cantidad");
             String fechaVencimientoStr = (String) request.get("fechaVencimiento");
-            //String codigoLote = (String) request.get("codigoLote");
-            //Obtengo el precio de compra del lote
+
             BigDecimal precioCompra;
             Object precioCompraObj = request.get("precioCompra");
             if (precioCompraObj instanceof Integer) {
@@ -46,12 +47,10 @@ public class LoteController {
                 throw new RuntimeException("Precio de compra inválido");
             }
 
-
             LocalDate fechaVencimiento = LocalDate.parse(fechaVencimientoStr);
 
-            Lote lote = loteService.crearLote(idProducto, idUsuario, cantidad,
+            Lote lote = loteService.crearLote(idProducto, idUsuario, idAlmacen, cantidad,
                     fechaVencimiento, precioCompra);
-
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

@@ -1,5 +1,4 @@
-// src/services/ventasService.ts
-
+const getIdAlmacen = () => localStorage.getItem('idAlmacen');
 const API_URL = 'http://localhost:8080/boticafarma';
 
 const getAuthHeaders = () => {
@@ -11,10 +10,16 @@ const getAuthHeaders = () => {
 };
 
 export const procesarVenta = async (ventaData: any) => {
+  const idAlmacenActivo = getIdAlmacen();
+  const ventaConAlmacen = {
+    ...ventaData,
+    idAlmacen: idAlmacenActivo ? Number(idAlmacenActivo) : null
+  };
+
   const response = await fetch(`${API_URL}/ventas`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify(ventaData),
+    body: JSON.stringify(ventaConAlmacen),
   });
   return response.json();
 };

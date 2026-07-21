@@ -85,8 +85,17 @@ const cargarRepartidores = async () => {
       }
     });
     const usuarios = await response.json();
-    // Filtrar solo REPARTIDORES
-    const reps = usuarios.filter((u: any) => u.rol === 'REPARTIDOR');
+
+    // ============ AÑADIR: obtener la sucursal activa desde localStorage ============
+    const idAlmacenActivo = localStorage.getItem('idAlmacen');
+    // ============ FIN ============
+
+    // ============ CAMBIO: filtrar por rol Y por sucursal activa ============
+    const reps = usuarios.filter((u: any) =>
+      u.rol === 'REPARTIDOR' && String(u.idAlmacen) === String(idAlmacenActivo)
+    );
+    // ============ FIN DEL CAMBIO ============
+
     setRepartidores(reps);
   } catch (error) {
     console.error("Error al cargar repartidores:", error);

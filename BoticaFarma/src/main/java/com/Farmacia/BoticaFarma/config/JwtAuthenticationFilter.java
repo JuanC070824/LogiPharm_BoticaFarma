@@ -59,6 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (jwtUtil.isTokenExpired(token)) {
+                System.err.println("⚠️ Token expirado enviado en la petición.");
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -76,8 +77,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (idAlmacen != null) {
                 request.setAttribute("idAlmacen", idAlmacen);
             }
+            request.setAttribute("rol", rol);
 
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol);
+            // 👇 CORRECCIÓN 1: Evitar duplicar el prefijo ROLE_
+            String authorityName = (rol != null && rol.startsWith("ROLE_")) ? rol : "ROLE_" + rol;
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority(authorityName);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
@@ -87,10 +91,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            // Establecer el usuario autenticado en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
         } catch (Exception e) {
-            System.err.println("❌ Error al validar token: " + e.getMessage());
+            // 👇 CORRECCIÓN 2: Mostrar el stacktrace completo si falla
+            System.err.println("❌ Error al validar token en JwtAuthenticationFilter: " + e.getMessage());
+            e.printStackTrace();
         }
 
         filterChain.doFilter(request, response);

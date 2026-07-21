@@ -34,8 +34,10 @@ public class AdministracionController {
 
     @PostMapping("/crear")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UsuarioDTO> crearUsuario(@RequestBody UsuarioDTO usuarioDTO) {
-        UsuarioDTO nuevoUsuario = usuarioService.crear(usuarioDTO);
+    public ResponseEntity<UsuarioDTO> crearUsuario(
+            @RequestAttribute("idBotica") Integer idBotica, // ============ AÑADIR: idBotica viene del token, no del body ============
+            @RequestBody UsuarioDTO usuarioDTO) {
+        UsuarioDTO nuevoUsuario = usuarioService.crear(idBotica, usuarioDTO); // ============ CAMBIO: se pasa idBotica ============
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
     }
 

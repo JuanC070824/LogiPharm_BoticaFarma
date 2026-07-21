@@ -1,5 +1,4 @@
-// src/services/inventarioService.ts
-
+const getIdAlmacen = () => localStorage.getItem('idAlmacen');
 const API_URL = 'http://localhost:8080/boticafarma';
 
 const getAuthHeaders = () => {
@@ -16,10 +15,16 @@ const getAuthHeaders = () => {
 
 // ========== PRODUCTOS ==========
 export const obtenerProductos = async (page = 0, size = 10) => {
+  const idAlmacenActivo = getIdAlmacen(); // <-- ya existe esta función arriba en el archivo
+
   const response = await fetch(
-    `${API_URL}/productos?page=${page}&size=${size}`,
+    `${API_URL}/productos?page=${page}&size=${size}&idAlmacen=${idAlmacenActivo}`, // <-- AÑADIDO
     { headers: getAuthHeaders() }
   );
+  if (!response.ok) {
+    console.error(`Error HTTP ${response.status} en obtenerProductos`);
+    return { success: false, productos: [], totalPages: 0 };
+  }
   return response.json();
 };
 
@@ -30,10 +35,13 @@ export const buscarProductos = async (
   page = 0,
   size = 10
 ) => {
+  const idAlmacenActivo = getIdAlmacen(); // <-- AÑADIDO
+
   const params = new URLSearchParams();
   if (nombre) params.append('nombre', nombre);
   if (idCategoria) params.append('idCategoria', idCategoria.toString());
   if (idMarca) params.append('idMarca', idMarca.toString());
+  if (idAlmacenActivo) params.append('idAlmacen', idAlmacenActivo); // <-- AÑADIDO
   params.append('page', page.toString());
   params.append('size', size.toString());
 
@@ -43,6 +51,7 @@ export const buscarProductos = async (
   );
   return response.json();
 };
+
 
 export const crearProducto = async (producto: any) => {
   const response = await fetch(`${API_URL}/productos`, {
@@ -109,6 +118,10 @@ export const obtenerCategorias = async () => {
   const response = await fetch(`${API_URL}/categorias`, {
     headers: getAuthHeaders(),
   });
+  if (!response.ok) {
+    console.error(`Error HTTP ${response.status} en obtenerCategorias`);
+    return [];
+  }
   return response.json();
 };
 
@@ -134,6 +147,10 @@ export const obtenerMarcas = async () => {
   const response = await fetch(`${API_URL}/marcas`, {
     headers: getAuthHeaders(),
   });
+  if (!response.ok) {
+    console.error(`Error HTTP ${response.status} en obtenerMarcas`);
+    return [];
+  }
   return response.json();
 };
 
@@ -162,29 +179,26 @@ export const eliminarMarca = async (id: number) => {
 };
 
 // ========== LOTES ==========
-
 export const crearLote = async (lote: any) => {
-  console.log('📦 Enviando lote:', lote);
+  const idAlmacenActivo = getIdAlmacen();
+  const loteConAlmacen = {
+    ...lote,
+    idAlmacen: idAlmacenActivo ? Number(idAlmacenActivo) : null
+  };
+
+  console.log('📦 Enviando lote:', loteConAlmacen);
   console.log('🔑 Headers:', getAuthHeaders());
   
   const response = await fetch(`${API_URL}/lotes`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify(lote),
+    body: JSON.stringify(loteConAlmacen),
   });
   
   console.log('📥 Status:', response.status);
   
   return response.json();
 };
-/*export const crearLote = async (lote: any) => {
-  const response = await fetch(`${API_URL}/lotes`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(lote),
-  });
-  return response.json();
-};*/
 
 export const obtenerLotesPorProducto = async (idProducto: number) => {
   const response = await fetch(`${API_URL}/lotes/producto/${idProducto}`, {

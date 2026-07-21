@@ -28,31 +28,35 @@ public class LoteService {
     @Autowired
     private CompraRepository compraRepository;
 
+    @Autowired
+    private AlmacenRepository almacenRepository;
+
     // Crear lote (agregar stock)
     @Transactional
-    public Lote crearLote(Integer idProducto, Integer idUsuario, Integer cantidad,
+    public Lote crearLote(Integer idProducto, Integer idUsuario, Integer idAlmacen, Integer cantidad,
                           LocalDate fechaVencimiento, BigDecimal precioCompra) {
         Producto producto = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Almacen almacen = almacenRepository.findById(idAlmacen)
+                .orElseThrow(() -> new RuntimeException("Almacén no encontrado"));
 
-        // CREAR COMPRA AUTOMÁTICAMENTE
         BigDecimal totalCompra = precioCompra.multiply(new BigDecimal(cantidad));
         Compra compra = new Compra();
         compra.setUsuario(usuario);
-        compra.setAlmacen(null);  // Lo vas a borrar según dijiste
+        compra.setAlmacen(null);
         compra.setFecha(LocalDateTime.now());
         compra.setValor(totalCompra);
 
         Compra compraGuardada = compraRepository.save(compra);
 
-        // Ahora crear el lote con la compra asociada
         String codigoLote = generarCodigoLote(producto);
         EstadoLote estadoInicial = calcularEstadoLote(cantidad, cantidad, fechaVencimiento);
 
         Lote lote = new Lote();
         lote.setProducto(producto);
+        lote.setAlmacen(almacen);
         lote.setCompra(compraGuardada);
         lote.setCodigoLote(codigoLote);
         lote.setCantidadInicial(cantidad);
@@ -62,13 +66,7 @@ public class LoteService {
         lote.setPrecioCompra(precioCompra);
         lote.setEstadoLote(estadoInicial);
 
-
-        Lote loteGuardado = loteRepository.save(lote);
-
-        // Actualizar stock del producto
-        actualizarStockProducto(idProducto);
-
-        return loteGuardado;
+        return loteRepository.save(lote);
     }
 
     //Con este metodo se exporta el código del lote
@@ -145,10 +143,10 @@ public class LoteService {
     }
 
     // Actualizar stock total del producto
-    private void actualizarStockProducto(Integer idProducto) {
+    /*private void actualizarStockProducto(Integer idProducto) {
         int stockTotal = loteRepository.calcularStockTotal(idProducto);
         Producto producto = productoRepository.findById(idProducto).orElseThrow();
         producto.setStock(stockTotal);
         productoRepository.save(producto);
-    }
+    }*/
 }

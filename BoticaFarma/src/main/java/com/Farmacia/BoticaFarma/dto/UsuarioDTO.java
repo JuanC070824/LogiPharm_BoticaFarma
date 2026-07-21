@@ -13,4 +13,5 @@ public class UsuarioDTO {
     private String password;
     private String rol; // Como String para el frontend
     private String nombreCompleto;
+    private Integer idAlmacen;
 }

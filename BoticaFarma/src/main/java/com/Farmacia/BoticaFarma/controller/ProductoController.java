@@ -23,22 +23,30 @@ public class ProductoController {
     @Autowired
     private ProductoService productoService;
 
-    // Listar productos con paginación filtrados por Botica
     @GetMapping
     public ResponseEntity<Map<String, Object>> listarProductos(
             @RequestAttribute("idBotica") Integer idBotica,
+            @RequestParam("idAlmacen") Integer idAlmacenToken,
+            @RequestParam(required = false) Integer idAlmacen,
+            @RequestAttribute("rol") String rol,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "idProducto") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
         try {
+            // ============ AÑADIR: decidir qué idAlmacen usar según el rol ============
+            Integer idAlmacenFinal = "ADMIN".equals(rol) && idAlmacen != null
+                    ? idAlmacen         // el ADMIN puede elegir sucursal libremente
+                    : idAlmacenToken;   // cualquier otro rol SIEMPRE usa la sucursal fija de su token
+            // ============ FIN ============
+
+
             Sort.Direction sortDirection = direction.equalsIgnoreCase("desc")
                     ? Sort.Direction.DESC : Sort.Direction.ASC;
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
 
-            Page<ProductoDTO> productos = productoService.listarProductos(idBotica, pageable);
-
+            Page<ProductoDTO> productos = productoService.listarProductos(idBotica, idAlmacenFinal, pageable); // ============ CAMBIO ============
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("productos", productos.getContent());
@@ -55,10 +63,12 @@ public class ProductoController {
         }
     }
 
-    // Buscar productos con filtros y Botica
     @GetMapping("/buscar")
     public ResponseEntity<Map<String, Object>> buscarProductos(
             @RequestAttribute("idBotica") Integer idBotica,
+            @RequestAttribute("idAlmacen") Integer idAlmacenToken,
+            @RequestAttribute("idAlmacen") Integer idAlmacen,
+            @RequestAttribute("rol") String rol,
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Integer idCategoria,
             @RequestParam(required = false) Integer idMarca,
@@ -66,9 +76,13 @@ public class ProductoController {
             @RequestParam(defaultValue = "10") int size
     ) {
         try {
+            Integer idAlmacenFinal = "ADMIN".equals(rol) && idAlmacen != null
+                    ? idAlmacen
+                    : idAlmacenToken;
+
             Pageable pageable = PageRequest.of(page, size);
             Page<ProductoDTO> productos = productoService.buscarProductos(
-                    idBotica, nombre, idCategoria, idMarca, pageable
+                    idBotica, idAlmacen, nombre, idCategoria, idMarca, pageable
             );
 
             Map<String, Object> response = new HashMap<>();
@@ -87,11 +101,19 @@ public class ProductoController {
         }
     }
 
-    // Obtener producto por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> obtenerProducto(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> obtenerProducto(
+            @PathVariable Integer id,
+            @RequestAttribute("idAlmacen") Integer idAlmacenToken, // ============ CAMBIO ============
+            @RequestParam(required = false) Integer idAlmacen, // ============ AÑADIR ============
+            @RequestAttribute("rol") String rol
+    ) {
         try {
-            ProductoDTO producto = productoService.obtenerProductoPorId(id);
+
+            Integer idAlmacenFinal = "ADMIN".equals(rol) && idAlmacen != null
+                    ? idAlmacen
+                    : idAlmacenToken;
+            ProductoDTO producto = productoService.obtenerProductoPorId(id, idAlmacen);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -106,14 +128,20 @@ public class ProductoController {
         }
     }
 
-    // Crear producto para la Botica del usuario autenticado
     @PostMapping
     public ResponseEntity<Map<String, Object>> crearProducto(
             @RequestAttribute("idBotica") Integer idBotica,
+            @RequestAttribute("idAlmacen") Integer idAlmacenToken, // ============ CAMBIO ============
+            @RequestParam(required = false) Integer idAlmacen, // ============ AÑADIR ============
+            @RequestAttribute("rol") String rol, // ============ AÑADIR ============
             @Valid @RequestBody CreateProductoDTO dto
     ) {
         try {
-            ProductoDTO producto = productoService.crearProducto(idBotica, dto);
+            Integer idAlmacenFinal = "ADMIN".equals(rol) && idAlmacen != null
+                    ? idAlmacen
+                    : idAlmacenToken;
+
+            ProductoDTO producto = productoService.crearProducto(idBotica, idAlmacen, dto);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -129,14 +157,20 @@ public class ProductoController {
         }
     }
 
-    // Actualizar producto
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> actualizarProducto(
             @PathVariable Integer id,
+            @RequestAttribute("idAlmacen") Integer idAlmacenToken, // ============ CAMBIO ============
+            @RequestParam(required = false) Integer idAlmacen, // ============ AÑADIR ============
+            @RequestAttribute("rol") String rol, // ============ AÑADIR ============
             @Valid @RequestBody CreateProductoDTO dto
     ) {
         try {
-            ProductoDTO producto = productoService.actualizarProducto(id, dto);
+            Integer idAlmacenFinal = "ADMIN".equals(rol) && idAlmacen != null
+                    ? idAlmacen
+                    : idAlmacenToken;
+
+            ProductoDTO producto = productoService.actualizarProducto(id, idAlmacen, dto);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -152,7 +186,6 @@ public class ProductoController {
         }
     }
 
-    // Eliminar producto
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> eliminarProducto(@PathVariable Integer id) {
         try {
@@ -171,17 +204,23 @@ public class ProductoController {
         }
     }
 
-    // Productos con stock bajo por Botica
     @GetMapping("/stock-bajo")
     public ResponseEntity<Map<String, Object>> productosStockBajo(
             @RequestAttribute("idBotica") Integer idBotica,
+            @RequestAttribute("idAlmacen") Integer idAlmacenToken, // ============ CAMBIO ============
+            @RequestParam(required = false) Integer idAlmacen, // ============ AÑADIR ============
+            @RequestAttribute("rol") String rol, // ============ AÑADIR ============
             @RequestParam(defaultValue = "10") Integer minStock,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         try {
+            Integer idAlmacenFinal = "ADMIN".equals(rol) && idAlmacen != null
+                    ? idAlmacen
+                    : idAlmacenToken;
+
             Pageable pageable = PageRequest.of(page, size);
-            Page<ProductoDTO> productos = productoService.productosStockBajo(idBotica, minStock, pageable);
+            Page<ProductoDTO> productos = productoService.productosStockBajo(idBotica, idAlmacen, minStock, pageable);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

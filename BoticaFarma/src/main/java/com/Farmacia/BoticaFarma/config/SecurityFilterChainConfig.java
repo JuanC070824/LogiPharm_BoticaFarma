@@ -48,6 +48,12 @@ public class SecurityFilterChainConfig {
 
                         // Permitir rutas de autenticación y registro público
                         .requestMatchers("/api/auth/**", "/boticafarma/login", "/boticafarma/auth/**").permitAll()
+                        .requestMatchers("/api/almacenes/**").permitAll()
+
+                        .requestMatchers("/boticafarma/productos/**", "/api/productos/**").permitAll()
+                        .requestMatchers("/boticafarma/categorias/**", "/api/categorias/**").permitAll()
+                        .requestMatchers("/boticafarma/marcas/**", "/api/marcas/**").permitAll()
+                        //.requestMatchers("/boticafarma/lotes/**").hasAuthority("ADMIN")
 
                         // Rutas protegidas por rol o token
                         .requestMatchers("/boticafarma/lotes/**").hasRole("ADMIN")
