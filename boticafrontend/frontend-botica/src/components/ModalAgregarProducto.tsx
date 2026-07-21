@@ -19,8 +19,8 @@ export const ModalAgregarProducto = ({
   onClose,
   onSuccess,
   producto,
-  categorias,
-  marcas,
+  categorias = [],
+  marcas = [],
 }: Props) => {
   const [nombre, setNombre] = useState("");
   const [precio, setPrecio] = useState("");
@@ -30,10 +30,10 @@ export const ModalAgregarProducto = ({
 
   useEffect(() => {
     if (producto) {
-      setNombre(producto.nombre_producto);
-      setPrecio(producto.precio.toString());
-      setIdCategoria(producto.idCategoria.toString());
-      setIdMarca(producto.idMarca.toString());
+      setNombre(producto.nombre_producto || "");
+      setPrecio(producto.precio ? producto.precio.toString() : "");
+      setIdCategoria(producto.idCategoria ? producto.idCategoria.toString() : "");
+      setIdMarca(producto.idMarca ? producto.idMarca.toString() : "");
     } else {
       limpiarFormulario();
     }
@@ -54,7 +54,7 @@ export const ModalAgregarProducto = ({
       const data = {
         nombre_producto: nombre,
         precio: parseFloat(precio),
-        stock: 0,  // Siempre 0, se maneja por lotes
+        stock: 0, // El stock inicial se gestiona con lotes
         idCategoria: parseInt(idCategoria),
         idMarca: parseInt(idMarca),
       };
@@ -66,13 +66,14 @@ export const ModalAgregarProducto = ({
         response = await crearProducto(data);
       }
 
-      if (response.success) {
+      // Si el backend responde array u objeto sin wrap 'success'
+      if (response && (response.success || response.idProducto)) {
         alert(producto ? "Producto actualizado correctamente" : "Producto creado correctamente");
         onSuccess();
         onClose();
         limpiarFormulario();
       } else {
-        alert(response.message || "Error al guardar el producto");
+        alert(response?.message || "Error al guardar el producto");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -125,13 +126,13 @@ export const ModalAgregarProducto = ({
               <select
                 value={idCategoria}
                 onChange={(e) => setIdCategoria(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 bg-white text-gray-800"
                 required
               >
                 <option value="">Seleccionar...</option>
-                {categorias.map((cat) => (
+                {categorias.map((cat: any) => (
                   <option key={cat.idCategoria} value={cat.idCategoria}>
-                    {cat.nombre_categoria}
+                    {cat.nombre_categoria || cat.nombreCategoria || cat.nombre}
                   </option>
                 ))}
               </select>
@@ -144,20 +145,20 @@ export const ModalAgregarProducto = ({
               <select
                 value={idMarca}
                 onChange={(e) => setIdMarca(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 bg-white text-gray-800"
                 required
               >
                 <option value="">Seleccionar...</option>
-                {marcas.map((marca) => (
+                {marcas.map((marca: any) => (
                   <option key={marca.idMarca} value={marca.idMarca}>
-                    {marca.nombreMarca}
+                    {marca.nombreMarca || marca.nombre_marca || marca.nombre}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Solo Precio */}
+          {/* Precio */}
           <div>
             <label className="block text-sm font-medium mb-2">
               Precio (S/): <span className="text-red-500">*</span>

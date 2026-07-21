@@ -8,6 +8,7 @@ import com.Farmacia.BoticaFarma.model.Marca;
 import com.Farmacia.BoticaFarma.model.Producto;
 import com.Farmacia.BoticaFarma.repository.BoticaRepository;
 import com.Farmacia.BoticaFarma.repository.CategoriaRepository;
+import com.Farmacia.BoticaFarma.repository.LoteRepository;
 import com.Farmacia.BoticaFarma.repository.MarcaRepository;
 import com.Farmacia.BoticaFarma.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,32 +32,35 @@ public class ProductoService {
     @Autowired
     private BoticaRepository boticaRepository;
 
-    // Listar productos filtrados por Botica
+    @Autowired
+    private LoteRepository loteRepository;
+
+    // Listar productos filtrados por Botica y con stock de la sucursal actual
     @Transactional(readOnly = true)
-    public Page<ProductoDTO> listarProductos(Integer idBotica, Pageable pageable) {
+    public Page<ProductoDTO> listarProductos(Integer idBotica, Integer idAlmacen, Pageable pageable) {
         return productoRepository.findByBotica_IdBoticaAndNombreProductoContainingIgnoreCase(idBotica, "", pageable)
-                .map(this::convertirADTO);
+                .map(p -> convertirADTO(p, idAlmacen));
     }
 
     // Buscar productos con filtros y Botica
     @Transactional(readOnly = true)
-    public Page<ProductoDTO> buscarProductos(Integer idBotica, String nombre, Integer idCategoria,
+    public Page<ProductoDTO> buscarProductos(Integer idBotica, Integer idAlmacen, String nombre, Integer idCategoria,
                                              Integer idMarca, Pageable pageable) {
         return productoRepository.buscarConFiltros(idBotica, nombre, idCategoria, idMarca, pageable)
-                .map(this::convertirADTO);
+                .map(p -> convertirADTO(p, idAlmacen));
     }
 
-    // Obtener producto por ID (verificando que pertenezca a la botica)
+    // Obtener producto por ID (con stock de la sucursal actual)
     @Transactional(readOnly = true)
-    public ProductoDTO obtenerProductoPorId(Integer id) {
+    public ProductoDTO obtenerProductoPorId(Integer id, Integer idAlmacen) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
-        return convertirADTO(producto);
+        return convertirADTO(producto, idAlmacen);
     }
 
     // Crear producto asignándolo a la Botica logueada
     @Transactional
-    public ProductoDTO crearProducto(Integer idBotica, CreateProductoDTO dto) {
+    public ProductoDTO crearProducto(Integer idBotica, Integer idAlmacen, CreateProductoDTO dto) {
         Categoria categoria = categoriaRepository.findById(dto.getIdCategoria())
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
@@ -69,18 +73,18 @@ public class ProductoService {
         Producto producto = new Producto();
         producto.setNombreProducto(dto.getNombre_producto());
         producto.setPrecio(dto.getPrecio());
-        producto.setStock(0);  // Stock inicial en 0
+        producto.setStock(0);
         producto.setCategoria(categoria);
         producto.setMarca(marca);
-        producto.setBotica(botica); // <--- VINCULACIÓN MULTI-TENANT
+        producto.setBotica(botica);
 
         Producto productoGuardado = productoRepository.save(producto);
-        return convertirADTO(productoGuardado);
+        return convertirADTO(productoGuardado, idAlmacen);
     }
 
     // Actualizar producto
     @Transactional
-    public ProductoDTO actualizarProducto(Integer id, CreateProductoDTO dto) {
+    public ProductoDTO actualizarProducto(Integer id, Integer idAlmacen, CreateProductoDTO dto) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
@@ -96,7 +100,7 @@ public class ProductoService {
         producto.setMarca(marca);
 
         Producto productoActualizado = productoRepository.save(producto);
-        return convertirADTO(productoActualizado);
+        return convertirADTO(productoActualizado, idAlmacen);
     }
 
     // Eliminar producto
@@ -110,18 +114,18 @@ public class ProductoService {
 
     // Productos con stock bajo por Botica
     @Transactional(readOnly = true)
-    public Page<ProductoDTO> productosStockBajo(Integer idBotica, Integer minStock, Pageable pageable) {
+    public Page<ProductoDTO> productosStockBajo(Integer idBotica, Integer idAlmacen, Integer minStock, Pageable pageable) {
         return productoRepository.findProductosStockBajo(idBotica, minStock, pageable)
-                .map(this::convertirADTO);
+                .map(p -> convertirADTO(p, idAlmacen));
     }
 
-    // Convertir Entidad a DTO
-    private ProductoDTO convertirADTO(Producto producto) {
+    // Convertir Entidad a DTO (siempre recibe idAlmacen para calcular el stock de esa sucursal)
+    private ProductoDTO convertirADTO(Producto producto, Integer idAlmacen) {
         ProductoDTO dto = new ProductoDTO();
         dto.setIdProducto(producto.getIdProducto());
         dto.setNombre_producto(producto.getNombreProducto());
         dto.setPrecio(producto.getPrecio());
-        dto.setStock(producto.getStock());
+        dto.setStock(loteRepository.calcularStockPorAlmacen(producto.getIdProducto(), idAlmacen));
 
         if (producto.getCategoria() != null) {
             dto.setIdCategoria(producto.getCategoria().getIdCategoria());

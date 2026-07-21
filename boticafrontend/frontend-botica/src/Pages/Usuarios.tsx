@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-
+import { getSucursalesByBotica } from '../services/sucursalService';
 const API_URL = 'http://localhost:8080/api/usuarios';
 
 interface Usuario {
@@ -10,8 +10,8 @@ interface Usuario {
   username: string;
   rol: string;
   nombreCompleto: string;
+  idAlmacen?: number; // ============ AÑADIR ============
 }
-
 interface Cliente {
   idCliente: number;
   nombre: string;
@@ -32,8 +32,9 @@ export default function Usuarios() {
   const [editingId, setEditingId] = useState<number | null>(null);
   
   const [usuarioForm, setUsuarioForm] = useState({
-    nombre: '', apat: '', amat: '', username: '', password: '', rol: 'FARMACEUTICO'
+    nombre: '', apat: '', amat: '', username: '', password: '', rol: 'FARMACEUTICO', idAlmacen: ''
   });
+  const [sucursales, setSucursales] = useState<{idAlmacen: number, nombreSucursal: string}[]>([]);
 
   const [clienteForm, setClienteForm] = useState({
     nombre: '', apellidoPat: '', apellidoMat: '', dni: '', ruc: ''
@@ -46,6 +47,9 @@ export default function Usuarios() {
     if (isAdmin) {
       setActiveTab('usuarios');
       cargarUsuarios();
+      // ============ AÑADIR: cargar sucursales al entrar como ADMIN ============
+      cargarSucursalesParaForm();
+      // ============ FIN ============
     }
     cargarClientes();
   }, []);
@@ -71,6 +75,16 @@ export default function Usuarios() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+  // ============ función para traer las sucursales de la Botica actual ============
+  const cargarSucursalesParaForm = async () => {
+    try {
+      const idBotica = localStorage.getItem('idBotica') || '4';
+      const data = await getSucursalesByBotica(idBotica);
+      setSucursales(data);
+    } catch (error) {
+      console.error('Error al cargar sucursales:', error);
     }
   };
 
@@ -99,24 +113,27 @@ export default function Usuarios() {
         amat: usuario.amat,
         username: usuario.username,
         password: '',
-        rol: usuario.rol
+        rol: usuario.rol,
+        idAlmacen: usuario.idAlmacen ? usuario.idAlmacen.toString() : '' // ============ AÑADIR ============
       });
       setEditingId(usuario.idUsuario);
     } else {
-      setUsuarioForm({ nombre: '', apat: '', amat: '', username: '', password: '', rol: 'FARMACEUTICO' });
+      setUsuarioForm({ nombre: '', apat: '', amat: '', username: '', password: '', rol: 'FARMACEUTICO', idAlmacen: '' }); // ============ CAMBIO: se añadió idAlmacen: '' ============
       setEditingId(null);
     }
     setModalType('usuario');
     setModalOpen(true);
   };
-
 const guardarUsuario = async () => {
   try {
     // AGREGAR: Preparar datos - si es REPARTIDOR, llenar campos dummy
-    let datosAEnviar = usuarioForm;
+    let datosAEnviar: any = {
+      ...usuarioForm,
+      idAlmacen: usuarioForm.idAlmacen ? Number(usuarioForm.idAlmacen) : null
+    };
     if (usuarioForm.rol === 'REPARTIDOR') {
       datosAEnviar = {
-        ...usuarioForm,
+        ...datosAEnviar,
         username: 'dummy', // Backend generará UUID real
         password: 'dummy'  // Backend generará contraseña real
       };
@@ -280,13 +297,14 @@ const guardarUsuario = async () => {
                     <th className="border p-3 text-left">Nombre Completo</th>
                     <th className="border p-3 text-left">Username</th>
                     <th className="border p-3 text-left">Rol</th>
+                    <th className="border p-3 text-left">Sucursal</th>
                     <th className="border p-3 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {usuarios.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="border p-3 text-center text-gray-500">
+                      <td colSpan={6} className="border p-3 text-center text-gray-500">
                         No hay usuarios registrados
                       </td>
                     </tr>
@@ -305,6 +323,13 @@ const guardarUsuario = async () => {
                             {usuario.rol}
                           </span>
                         </td>
+                        {/* ============ CAMBIO: el td de Sucursal ahora es hermano del td de Rol, no está anidado dentro ============ */}
+                        <td className="border p-3">
+                          {usuario.rol === 'ADMIN'
+                            ? 'Todas'
+                            : (sucursales.find(s => s.idAlmacen === usuario.idAlmacen)?.nombreSucursal || '—')}
+                        </td>
+                        {/* ============ FIN ============ */}
                         <td className="border p-3 text-center space-x-2">
                           <button
                             onClick={() => abrirModalUsuario(usuario)}
@@ -361,7 +386,7 @@ const guardarUsuario = async () => {
                 <tbody>
                   {clientes.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="border p-3 text-center text-gray-500">
+                      <td colSpan={6} className="border p-3 text-center text-gray-500">
                         No hay clientes registrados
                       </td>
                     </tr>
@@ -453,7 +478,24 @@ const guardarUsuario = async () => {
                       <option value="REPARTIDOR">REPARTIDOR</option>
                     </select>
                   </div>
-
+                  {/* ============ AÑADIR: selector de sucursal, solo visible si el rol no es ADMIN ============ */}
+                    {usuarioForm.rol !== 'ADMIN' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sucursal asignada</label>
+                        <select
+                          className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={usuarioForm.idAlmacen}
+                          onChange={(e) => setUsuarioForm({...usuarioForm, idAlmacen: e.target.value})}
+                          required
+                        >
+                          <option value="">-- Selecciona una sucursal --</option>
+                          {sucursales.map((s) => (
+                            <option key={s.idAlmacen} value={s.idAlmacen}>{s.nombreSucursal}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {/* ============ FIN ============ */}
                   {/*TERCERO: Condicional - Username/Password SOLO si NO es REPARTIDOR */}
                   {usuarioForm.rol !== 'REPARTIDOR' && (
                     <>

@@ -153,8 +153,17 @@ public class VentaService {
             cliente = clienteRepository.save(cliente);
         }
         if (cliente == null) {
-            cliente = clienteRepository.findById(1)
-                    .orElseThrow(() -> new RuntimeException("Cliente común no encontrado (ID=1)"));
+            // ============ CAMBIO: ya no depende de un ID fijo; busca o crea el cliente genérico por DNI ficticio ============
+            cliente = clienteRepository.findByDNI(99999999)
+                    .orElseGet(() -> {
+                        Cliente clienteGenerico = new Cliente();
+                        clienteGenerico.setNombre("Cliente");
+                        clienteGenerico.setApellidoPat("Comun");
+                        clienteGenerico.setApellidoMat("Comun");
+                        clienteGenerico.setDNI(99999999); // DNI ficticio válido, identifica al cliente genérico
+                        return clienteRepository.save(clienteGenerico);
+                    });
+            // ============ FIN DEL CAMBIO ============
         }
 
         Venta venta = new Venta();

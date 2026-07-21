@@ -61,11 +61,19 @@ const Inventario = () => {
       if (productosRes.success) {
         setProductos(productosRes.productos || []);
         setTotalPages(productosRes.totalPages || 0);
+      } else if (Array.isArray(productosRes)) {
+        // En caso productosRes también retorne un array directo o Page
+        setProductos(productosRes);
       }
-      if (categoriasRes.success) setCategorias(categoriasRes.categorias || []);
-      if (marcasRes.success) setMarcas(marcasRes.marcas || []);
+
+      // 👈 CORRECCIÓN: Asignar directamente si es un Array o fallback a .categorias/.marcas
+      const listaCategorias = Array.isArray(categoriasRes) ? categoriasRes : (categoriasRes.categorias || []);
+      const listaMarcas = Array.isArray(marcasRes) ? marcasRes : (marcasRes.marcas || []);
+
+      setCategorias(listaCategorias);
+      setMarcas(listaMarcas);
     } catch (error) {
-      console.error("Error al cargar datos: tabla vacía", error);
+      console.error("Error al cargar datos:", error);
       alert("No se pudieron cargar los datos");
     } finally {
       setLoading(false);

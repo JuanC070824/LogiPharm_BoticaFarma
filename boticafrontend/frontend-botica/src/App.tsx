@@ -17,7 +17,7 @@ import Usuarios from "./Pages/Usuarios";
 import Ventas from "./Pages/Ventas";
 import './index.css';
 import logofarma from "./assets/logofarma.png";
-
+import SeleccionSucursal from './Pages/SeleccionSucursal';
 const queryClient = new QueryClient();
 
 // Componente para proteger rutas
@@ -65,7 +65,14 @@ const App = () => (
           {/* Rutas públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/registro-botica" element={<RegisterBotica />} /> {/* <--- Nueva ruta */}
-
+          <Route
+            path="/sucursales"
+            element={
+              localStorage.getItem('rol') === 'ADMIN'
+                ? <SeleccionSucursal />
+                : <Navigate to="/dashboard" replace />
+            }
+          />
           {/* Rutas protegidas con Layout */}
           <Route
             path="/dashboard"

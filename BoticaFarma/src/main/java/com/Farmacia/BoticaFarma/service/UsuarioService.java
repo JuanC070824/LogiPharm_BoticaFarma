@@ -7,11 +7,15 @@ import com.Farmacia.BoticaFarma.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import com.Farmacia.BoticaFarma.model.Botica;
+import com.Farmacia.BoticaFarma.model.Almacen;
+import com.Farmacia.BoticaFarma.repository.BoticaRepository;
+import com.Farmacia.BoticaFarma.repository.AlmacenRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 
 @Service
 public class UsuarioService {
@@ -21,6 +25,11 @@ public class UsuarioService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private BoticaRepository boticaRepository;
+
+    @Autowired
+    private AlmacenRepository almacenRepository;
 
     // ============ MÉTODOS EXISTENTES (Login/Registro) ============
 
@@ -52,26 +61,38 @@ public class UsuarioService {
                 .collect(Collectors.toList());
     }
 
-    public UsuarioDTO crear(UsuarioDTO dto) {
+    public UsuarioDTO crear(Integer idBotica, UsuarioDTO dto) { // ============ CAMBIO: se agrega parámetro idBotica ============
         Usuario usuario = new Usuario();
         usuario.setNombre(dto.getNombre());
         usuario.setApat(dto.getApat());
         usuario.setAmat(dto.getAmat());
+
+        // ============ AÑADIR: asignar la Botica (siempre la del ADMIN logueado) ============
+        Botica botica = boticaRepository.findById(idBotica)
+                .orElseThrow(() -> new RuntimeException("Botica no encontrada"));
+        usuario.setBotica(botica);
+        // ============ FIN ============
+
+        // ============ AÑADIR: asignar el Almacen/sucursal elegida en el formulario ============
+        if (dto.getIdAlmacen() != null) {
+            Almacen almacen = almacenRepository.findById(dto.getIdAlmacen())
+                    .orElseThrow(() -> new RuntimeException("Almacén no encontrado"));
+            usuario.setAlmacen(almacen);
+        }
+        // ============ FIN ============
 
         Rol rol = Rol.valueOf(dto.getRol());
         if (rol == Rol.REPARTIDOR) {
             String usernameAuto = "REP_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
             usuario.setUsername(usernameAuto);
 
-            // Contraseña dummy (nunca se usa, pero es requerida en la BD)
             String passwordDummy = UUID.randomUUID().toString();
             usuario.setPassword(passwordEncoder.encode(passwordDummy));
-        }else{
+        } else {
             usuario.setUsername(dto.getUsername());
             usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
-        // Convertir String a ENUM
         usuario.setRol(Rol.valueOf(dto.getRol()));
 
         Usuario guardado = usuarioRepository.save(usuario);
@@ -119,10 +140,15 @@ public class UsuarioService {
         dto.setApat(usuario.getApat());
         dto.setAmat(usuario.getAmat());
         dto.setUsername(usuario.getUsername());
-        // Convertir ENUM a String
         dto.setRol(usuario.getRol().name());
         dto.setNombreCompleto(usuario.getNombre() + " " + usuario.getApat() + " " + usuario.getAmat());
-        // NO devolver el password
+
+        // ============ AÑADIR: incluir idAlmacen para poder filtrar repartidores por sucursal en el frontend ============
+        if (usuario.getAlmacen() != null) {
+            dto.setIdAlmacen(usuario.getAlmacen().getIdAlmacen());
+        }
+        // ============ FIN ============
+
         return dto;
     }
 }

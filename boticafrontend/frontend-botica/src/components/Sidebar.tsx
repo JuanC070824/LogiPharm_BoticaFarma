@@ -10,6 +10,7 @@ export const Sidebar = () => {
     { path: "/inventario", icon: Package, label: "Inventario" },
     { path: "/reportes", icon: FileText, label: "Reportes" },
     { path: "/usuarios", icon: Users, label: "Usuarios" },
+    { path: "/sucursales", icon: Package, label: "Sucursales" },
     //{ path: "/delivery", icon: Truck, label: "Delivery" },
   ]
 

@@ -20,10 +20,20 @@ public class JwtUtil {
     }
 
     public String generateToken(Usuario usuario) {
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .setSubject(usuario.getUsername())
                 .claim("rol", usuario.getRol().toString())
                 .claim("nombre", usuario.getNombre())
+                .claim("idUsuario", usuario.getIdUsuario());
+
+        if (usuario.getBotica() != null) {
+            builder.claim("idBotica", usuario.getBotica().getIdBotica());
+        }
+        if (usuario.getAlmacen() != null) {
+            builder.claim("idAlmacen", usuario.getAlmacen().getIdAlmacen());
+        }
+
+        return builder
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSigningKey())

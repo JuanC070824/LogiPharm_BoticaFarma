@@ -28,7 +28,18 @@ const Login = () => {
         localStorage.setItem('nombre', response.nombre || '');
         localStorage.setItem('username', response.username || '');
         
-        navigate('/dashboard');
+        if (response.idBotica) {
+          localStorage.setItem('idBotica', response.idBotica.toString());
+        }
+        if (response.idAlmacen) {
+          localStorage.setItem('idAlmacen', response.idAlmacen.toString());
+        }
+        console.log('ROL RECIBIDO:', JSON.stringify(response.rol));
+        if (response.rol === 'ADMIN') {
+          navigate('/sucursales'); // el ADMIN elige sucursal libremente
+        } else {
+          navigate('/dashboard'); // FARMACEUTICO/REPARTIDOR van directo, ya tienen sucursal fija
+        }
       } else {
         setError(response.message || 'Error al iniciar sesión');
       }
