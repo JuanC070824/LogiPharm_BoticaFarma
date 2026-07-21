@@ -1,59 +1,76 @@
 package com.Farmacia.BoticaFarma.model;
-import com.Farmacia.BoticaFarma.model.Rol;
-
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 
 @Entity
-@Table(name="Usuario")
+@Table(name = "usuario")
 public class Usuario {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="idUsuario")
+    @Column(name = "idUsuario")
     private int idUsuario;
+
     @NotBlank(message = "El nombre no puede estar vacío")
-    @Column(name="nombre")
+    @Column(name = "nombre")
     private String nombre;
+
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
-    @Column(name="apat")
+    @Column(name = "apat")
     private String apat;
+
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
-    @Column(name="amat")
+    @Column(name = "amat")
     private String amat;
 
     @NotBlank(message = "El username no puede estar vacío")
-    @Column(name="username")
+    @Column(name = "username")
     private String username;
+
+    @Column(name = "email")
+    private String email;
+
     @NotBlank(message = "El password no puede estar vacío")
-    @Column(name="password")
+    @Column(name = "password")
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="rol")
+    @Column(name = "rol")
     private Rol rol;
 
+    @ManyToOne
+    @JoinColumn(name = "idBotica", nullable = false)
+    private Botica botica;
+
+    @ManyToOne
+    @JoinColumn(name = "idAlmacen", nullable = true)
+    private Almacen almacen;
+
     public Usuario() {
-        //Constructor vacío
     }
-    public Usuario(String nombre, String apat, String amat, String username, String password, Rol rol) {
-        //JPA ya maneja las id=
+
+    public Usuario(String nombre, String apat, String amat, String username, String password, Rol rol, Botica botica, Almacen almacen) {
         this.nombre = nombre;
         this.apat = apat;
         this.amat = amat;
         this.username = username;
         this.password = password;
         this.rol = rol;
+        this.botica = botica;
+        this.almacen = almacen;
     }
-    //GETTERS Y SETTERS
+
+    // GETTERS Y SETTERS
     public int getIdUsuario() {
         return idUsuario;
     }
@@ -94,6 +111,14 @@ public class Usuario {
         this.username = username;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -108,5 +133,21 @@ public class Usuario {
 
     public void setRol(Rol rol) {
         this.rol = rol;
+    }
+
+    public Botica getBotica() {
+        return botica;
+    }
+
+    public void setBotica(Botica botica) {
+        this.botica = botica;
+    }
+
+    public Almacen getAlmacen() {
+        return almacen;
+    }
+
+    public void setAlmacen(Almacen almacen) {
+        this.almacen = almacen;
     }
 }

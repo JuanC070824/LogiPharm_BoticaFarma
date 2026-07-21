@@ -1,4 +1,5 @@
 package com.Farmacia.BoticaFarma.model;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -10,29 +11,34 @@ import java.util.Set;
 @Entity
 @Table(name="Producto")
 public class Producto {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="idProducto")
     private int idProducto;
 
     @ManyToOne
-    @JoinColumn(name="idCategoria",nullable = false)
+    @JoinColumn(name="idCategoria", nullable = false)
     private Categoria categoria;
 
     @ManyToOne
-    @JoinColumn(name="idMarca", nullable=false)
+    @JoinColumn(name="idMarca", nullable = false)
     private Marca marca;
+
+    @ManyToOne
+    @JoinColumn(name = "idBotica", nullable = false)
+    private Botica botica;
 
     @NotBlank
     @Column(name="nombre_producto")
     private String nombreProducto;
 
-    @NotNull(message = "El precio no puede ser nulo")  // BigDecimal
+    @NotNull(message = "El precio no puede ser nulo")
     @DecimalMin(value = "0.01", message = "El precio debe ser mayor a 0")
     @Column(name="precio", precision=10, scale=2, nullable=false)
     private BigDecimal Precio;
 
-    @Column(name="Stock",nullable = false)
+    @Column(name="Stock", nullable = false)
     private int Stock;
 
     @ManyToMany
@@ -44,23 +50,28 @@ public class Producto {
     private Set<Almacen> almacenes;
 
     public Producto() {
-        //VACIO
+        // VACIO
     }
-    public Producto(Categoria categoria, Marca marca, String nombreProducto,
-                    BigDecimal precio, int stock,
-                    Set<Almacen> almacenes) {
+
+    public Producto(Categoria categoria, Marca marca, Botica botica, String nombreProducto,
+                    BigDecimal precio, int stock, Set<Almacen> almacenes) {
         this.categoria = categoria;
         this.marca = marca;
+        this.botica = botica;
         this.nombreProducto = nombreProducto;
         this.Precio = precio;
         this.Stock = stock;
         this.almacenes = almacenes;
     }
 
-    //SETTERS Y GETTERS
+    // SETTERS Y GETTERS
 
     public int getIdProducto() {
         return idProducto;
+    }
+
+    public void setIdProducto(int idProducto) {
+        this.idProducto = idProducto;
     }
 
     public Categoria getCategoria() {
@@ -77,6 +88,14 @@ public class Producto {
 
     public void setMarca(Marca marca) {
         this.marca = marca;
+    }
+
+    public Botica getBotica() {
+        return botica;
+    }
+
+    public void setBotica(Botica botica) {
+        this.botica = botica;
     }
 
     public String getNombreProducto() {

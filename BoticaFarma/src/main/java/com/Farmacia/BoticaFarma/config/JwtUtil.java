@@ -4,7 +4,8 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 import com.Farmacia.BoticaFarma.model.Usuario;
-
+import io.jsonwebtoken.Claims;
+import java.util.function.Function;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
@@ -36,7 +37,20 @@ public class JwtUtil {
     public String extractRol(String token) {
         return extractClaims(token).get("rol", String.class);
     }
+    public Integer extractidBotica(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("idBotica", Integer.class);
+    }
 
+    public Integer extractidAlmacen(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("idAlmacen", Integer.class);
+    }
+
+    public Integer extractIdUsuario(String token) {
+        Claims claims = extractClaims(token);
+        return claims.get("idUsuario", Integer.class);
+    }
     private Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -45,6 +59,10 @@ public class JwtUtil {
                 .getBody();
     }
 
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractClaims(token);
+        return claimsResolver.apply(claims);
+    }
     public boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());
     }

@@ -1,7 +1,6 @@
 package com.Farmacia.BoticaFarma.model;
 
 import java.math.BigDecimal;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,42 +9,81 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
-@Table(name="Almacen")
+@Table(name = "almacen")
 public class Almacen {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="idAlmacen")
+    @Column(name = "idAlmacen")
     private int idAlmacen;
 
-    /*Osea, un almacen esta asociado a un solo proveedor,
-    pero un proveedor tiene varios almacenes*/
     @ManyToOne
-    @JoinColumn(name="idProveedor",nullable = false)
+    @JoinColumn(name = "idBotica", nullable = false)
+    private Botica botica;
+
+    @NotBlank(message = "El nombre de la sucursal es obligatorio")
+    @Column(name = "nombre_sucursal", nullable = false)
+    private String nombreSucursal;
+
+    @Column(name = "direccion")
+    private String direccion;
+
+    // Cambiado a nullable = true
+    @ManyToOne
+    @JoinColumn(name = "idProveedor", nullable = true)
     private Proveedor proveedor;
 
-    @NotNull
-    @Column(name="latitud",precision = 10,scale = 7)
+    @Column(name = "latitud", precision = 10, scale = 7, nullable = true)
     private BigDecimal latitud;
 
-    @NotNull
-    @Column(name="longitud",precision = 10,scale = 7)
+    @Column(name = "longitud", precision = 10, scale = 7, nullable = true)
     private BigDecimal longitud;
 
-    public Almacen(){
-        //VACIOOOOOOOOOOO
+    public Almacen() {
     }
 
-    public Almacen(Proveedor proveedor, BigDecimal latitud, BigDecimal longitud) {
-        //No es necesario id en el constructor
-        this.proveedor = proveedor;
-        this.latitud = latitud;
-        this.longitud = longitud;
+    public Almacen(Botica botica, String nombreSucursal, String direccion) {
+        this.botica = botica;
+        this.nombreSucursal = nombreSucursal;
+        this.direccion = direccion;
     }
-    //GETTERS Y SETTERS
+
+    // GETTERS Y SETTERS
+    public int getIdAlmacen() {
+        return idAlmacen;
+    }
+
+    public void setIdAlmacen(int idAlmacen) {
+        this.idAlmacen = idAlmacen;
+    }
+
+    public Botica getBotica() {
+        return botica;
+    }
+
+    public void setBotica(Botica botica) {
+        this.botica = botica;
+    }
+
+    public String getNombreSucursal() {
+        return nombreSucursal;
+    }
+
+    public void setNombreSucursal(String nombreSucursal) {
+        this.nombreSucursal = nombreSucursal;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
     public Proveedor getProveedor() {
         return proveedor;
     }

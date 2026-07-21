@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -21,42 +22,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+
+        // Ignorar filtrado de JWT para solicitudes OPTIONS (Preflight CORS)
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
+        return pathMatcher.match("/api/auth/**", path) ||
+                pathMatcher.match("/boticafarma/login", path) ||
+                pathMatcher.match("/boticafarma/auth/**", path);
+    }
+
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // 1. Extraer el token del header Authorization
         String authHeader = request.getHeader("Authorization");
-        System.out.println("🔍 REQUEST: " + request.getRequestURI());
-        System.out.println("🔑 AUTH HEADER: " + authHeader);
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("❌ No hay token o no empieza con Bearer");
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring(7); // Remover "Bearer "
+        String token = authHeader.substring(7);
 
         try {
-            // 2. Validar el token
             if (jwtUtil.isTokenExpired(token)) {
-                System.out.println("❌ Token expirado");
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // 3. Extraer información del token
             String username = jwtUtil.extractUsername(token);
             String rol = jwtUtil.extractRol(token);
 
-            // 🔍 AGREGAR ESTOS LOGS:
-            System.out.println("✅ Token válido");
-            System.out.println("👤 Username: " + username);
-            System.out.println("🎭 Rol extraído: " + rol);
-            System.out.println("🎭 Rol con prefijo: ROLE_" + rol);
+            // EXTRAER ATRIBUTOS MULTI-TENANT DEL TOKEN Y PONERLOS EN EL REQUEST
+            Integer idBotica = jwtUtil.extractClaim(token, claims -> claims.get("idBotica", Integer.class));
+            Integer idAlmacen = jwtUtil.extractClaim(token, claims -> claims.get("idAlmacen", Integer.class));
 
-            // 4. Crear la autenticación
+            if (idBotica != null) {
+                request.setAttribute("idBotica", idBotica);
+            }
+            if (idAlmacen != null) {
+                request.setAttribute("idAlmacen", idAlmacen);
+            }
+
             SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol);
 
             UsernamePasswordAuthenticationToken authentication =
@@ -67,18 +87,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-            // 5. Establecer la autenticación en el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            System.out.println("✅ Autenticación establecida correctamente");
 
         } catch (Exception e) {
             System.err.println("❌ Error al validar token: " + e.getMessage());
-            e.printStackTrace(); // AGREGAR esto para ver el stack trace completo
         }
 
-        // 6. Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 }

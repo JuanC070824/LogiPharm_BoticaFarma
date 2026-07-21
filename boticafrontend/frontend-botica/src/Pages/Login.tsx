@@ -129,6 +129,17 @@ const Login = () => {
             >
               {loading ? 'Ingresando...' : 'Loguearse'}
             </Button>
+            {/* Enlace para Registro de Nueva Botica */}
+            <div className="text-center mt-6 text-sm text-white/90">
+              ¿Eres dueño de una botica?{" "}
+              <button
+                type="button"
+                onClick={() => navigate('/registro-botica')}
+                className="font-semibold text-white underline hover:text-white/80 transition-colors"
+              >
+                Regístrala aquí
+              </button>
+            </div>
           </form>
         </div>
       </div>

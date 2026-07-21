@@ -1,14 +1,15 @@
 package com.Farmacia.BoticaFarma.controller;
 
-import com.Farmacia.BoticaFarma.model.Detalle_venta;
 import com.Farmacia.BoticaFarma.dto.ReporteVentaDTO;
+import com.Farmacia.BoticaFarma.model.Detalle_venta;
 import com.Farmacia.BoticaFarma.model.Venta;
+import com.Farmacia.BoticaFarma.service.ReporteService;
 import com.Farmacia.BoticaFarma.service.VentaService;
-import com.Farmacia.BoticaFarma.service.ReporteService; // <--- Importante
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource; // <--- Para el PDF
-import org.springframework.http.HttpHeaders;          // <--- Para el PDF
-import org.springframework.http.MediaType;            // <--- Para el PDF
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +28,12 @@ public class VentaController {
     private VentaService ventaService;
 
     @Autowired
-    private ReporteService reporteService; // Inyectamos el servicio de reportes
+    private ReporteService reporteService;
 
     // ==========================================
-    //      ZONA DE REPORTES (¡NUEVO!)
+    //      ZONA DE REPORTES (MULTI-TENANT)
     // ==========================================
 
-    // 1. JSON para Gráficos (Mensual y Diario)
     @GetMapping("/mensuales/json")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReporteVentaDTO>> obtenerDatosGraficoMensual() {
@@ -46,7 +46,6 @@ public class VentaController {
         return ResponseEntity.ok(reporteService.obtenerDatosVentasDiarias());
     }
 
-    // 2. Descarga de PDFs (Mensual y Diario)
     @GetMapping("/mensuales/pdf")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InputStreamResource> descargarPdfMensual() {
@@ -65,7 +64,6 @@ public class VentaController {
     @GetMapping("/diarias/pdf")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InputStreamResource> descargarPdfDiario() {
-        // Llamamos al método DIARIO del servicio
         ByteArrayInputStream bis = reporteService.generarReporteVentasDiariasPdf();
 
         HttpHeaders headers = new HttpHeaders();
@@ -79,13 +77,17 @@ public class VentaController {
     }
 
     // ==========================================
-    //      ZONA DE GESTIÓN DE VENTAS (Existente)
+    //      ZONA DE GESTIÓN DE VENTAS
     // ==========================================
 
+    // Procesar Venta (Asociada al local activo)
     @PostMapping
-    public ResponseEntity<Map<String, Object>> procesarVenta(@RequestBody VentaService.VentaDTO ventaDTO) {
+    public ResponseEntity<Map<String, Object>> procesarVenta(
+            @RequestAttribute("idAlmacen") Integer idAlmacen,
+            @RequestBody VentaService.VentaDTO ventaDTO
+    ) {
         try {
-            Venta venta = ventaService.procesarVenta(ventaDTO);
+            Venta venta = ventaService.procesarVenta(idAlmacen, ventaDTO);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Venta procesada correctamente");
@@ -100,10 +102,13 @@ public class VentaController {
         }
     }
 
+    // Listar Ventas (Filtradas por la sucursal activa)
     @GetMapping
-    public ResponseEntity<Map<String, Object>> listarVentas() {
+    public ResponseEntity<Map<String, Object>> listarVentas(
+            @RequestAttribute("idAlmacen") Integer idAlmacen
+    ) {
         try {
-            List<Venta> ventas = ventaService.listarVentas();
+            List<Venta> ventas = ventaService.listarVentas(idAlmacen);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("ventas", ventas);
@@ -112,10 +117,11 @@ public class VentaController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error al listar ventas: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
+    // Obtener Venta por ID y sus detalles
     @GetMapping("/{idVenta}")
     public ResponseEntity<Map<String, Object>> obtenerVenta(@PathVariable Integer idVenta) {
         try {
@@ -130,7 +136,7 @@ public class VentaController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error al obtener venta: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 }

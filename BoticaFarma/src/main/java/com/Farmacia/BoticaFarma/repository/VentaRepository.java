@@ -20,4 +20,6 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
     @Query("SELECT FUNCTION('DATE_FORMAT', v.fecha, '%Y-%m'), SUM(v.total) " +
             "FROM Venta v GROUP BY FUNCTION('DATE_FORMAT', v.fecha, '%Y-%m')")
     List<Object[]> obtenerVentasMensuales();
+    //Obtener ventas por almacén/sucursal
+    List<Venta> findByAlmacen_IdAlmacen(Integer idAlmacen);
 }

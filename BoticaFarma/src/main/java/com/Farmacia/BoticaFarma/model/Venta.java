@@ -1,10 +1,6 @@
 package com.Farmacia.BoticaFarma.model;
 
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -18,48 +14,63 @@ public class Venta {
     private int idVenta;
 
     @ManyToOne
-    @JoinColumn(name="idUsuario")
+    @JoinColumn(name="idUsuario", nullable = false)
     private Usuario usuario;
 
-    @Column(name="fecha")
-    private LocalDateTime fecha=LocalDateTime.now();
+    @ManyToOne
+    @JoinColumn(name="idAlmacen", nullable = false)
+    private Almacen almacen; // <--- SUCURSAL/LOCAL DONDE SE REALIZÓ LA VENTA
 
-    @Column(name="total",precision = 10,scale = 2)
+    @Column(name="fecha")
+    private LocalDateTime fecha = LocalDateTime.now();
+
+    @Column(name="total", precision = 10, scale = 2)
     private BigDecimal total;
 
     @Enumerated(EnumType.STRING)
     @Column(name="metodopago")
     private Metodopago metodopago;
 
-    //Esto me sirve para el metodo de delivery
     @Column(name = "tipo_venta")
     @Enumerated(EnumType.STRING)
     private TipoVenta tipoVenta;
+
     public enum TipoVenta {
         MOSTRADOR, DELIVERY
     }
 
     public Venta() {
-        //VACIO
+        // VACÍO
     }
 
-    public Venta(Usuario usuario, LocalDateTime fecha, BigDecimal total, Metodopago metodopago) {
+    public Venta(Usuario usuario, Almacen almacen, LocalDateTime fecha, BigDecimal total, Metodopago metodopago) {
         this.usuario = usuario;
+        this.almacen = almacen;
         this.fecha = fecha;
         this.total = total;
         this.metodopago = metodopago;
     }
-    //GETTERS Y SETTERS
+
+    // GETTERS Y SETTERS
 
     public int getIdVenta() {
         return idVenta;
     }
+
     public Usuario getUsuario() {
         return usuario;
     }
 
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
+    }
+
+    public Almacen getAlmacen() {
+        return almacen;
+    }
+
+    public void setAlmacen(Almacen almacen) {
+        this.almacen = almacen;
     }
 
     public LocalDateTime getFecha() {
@@ -84,5 +95,13 @@ public class Venta {
 
     public void setMetodopago(Metodopago metodopago) {
         this.metodopago = metodopago;
+    }
+
+    public TipoVenta getTipoVenta() {
+        return tipoVenta;
+    }
+
+    public void setTipoVenta(TipoVenta tipoVenta) {
+        this.tipoVenta = tipoVenta;
     }
 }

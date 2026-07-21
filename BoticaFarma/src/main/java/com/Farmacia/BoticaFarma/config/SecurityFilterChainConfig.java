@@ -3,6 +3,9 @@ package com.Farmacia.BoticaFarma.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,23 +32,35 @@ public class SecurityFilterChainConfig {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        // HABILITAR CORS en lugar de deshabilitar
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
         httpSecurity.authorizeHttpRequests(
                 requestMatcher -> requestMatcher
-                        .requestMatchers("/boticafarma/auth/**").permitAll()
+                        // Permitir llamadas OPTIONS (Preflight de CORS)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Permitir rutas de autenticación y registro público
+                        .requestMatchers("/api/auth/**", "/boticafarma/login", "/boticafarma/auth/**").permitAll()
+
+                        // Rutas protegidas por rol o token
                         .requestMatchers("/boticafarma/lotes/**").hasRole("ADMIN")
                         .requestMatchers("/boticafarma/ventas/**").authenticated()
-                        .requestMatchers("/boticafarma/**").permitAll()
+                        .requestMatchers("/boticafarma/productos/**").authenticated()
+
                         .anyRequest().authenticated()
         );
 
         httpSecurity.sessionManagement(
                 sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );
+
         httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
@@ -54,13 +69,11 @@ public class SecurityFilterChainConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // 👈 AGREGAMOS "http://localhost" (el puerto 80 de Nginx en Docker)
-        configuration.setAllowedOrigins(List.of("http://localhost", "http://localhost:5173"));
-        
+
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization")); // Opcional: útil si devuelves JWT en las cabeceras
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

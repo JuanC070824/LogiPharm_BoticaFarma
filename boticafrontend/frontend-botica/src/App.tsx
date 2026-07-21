@@ -10,13 +10,16 @@ import Dashboard from "./Pages/Dashboard";
 import Delivery from "./Pages/Delivery";
 import Inventario from "./Pages/Inventario";
 import Login from "./Pages/Login";
+import RegisterBotica from "./Pages/RegisterBotica"; // <--- Importado
 import NotFound from "./Pages/NotFound";
 import Reportes from "./Pages/Reportes";
 import Usuarios from "./Pages/Usuarios";
 import Ventas from "./Pages/Ventas";
 import './index.css';
 import logofarma from "./assets/logofarma.png";
+
 const queryClient = new QueryClient();
+
 // Componente para proteger rutas
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -32,7 +35,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen w-full bg-background relative overflow-hidden">
-
       {/* MARCA DE AGUA GLOBAL */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none z-0 opacity-[0.03] ml-64">
         <img
@@ -60,8 +62,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Ruta pública - Login */}
+          {/* Rutas públicas */}
           <Route path="/login" element={<Login />} />
+          <Route path="/registro-botica" element={<RegisterBotica />} /> {/* <--- Nueva ruta */}
 
           {/* Rutas protegidas con Layout */}
           <Route

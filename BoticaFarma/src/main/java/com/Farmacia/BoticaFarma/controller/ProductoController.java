@@ -18,15 +18,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/boticafarma/productos")
-//@CrossOrigin(origins = "http://localhost:5173")
 public class ProductoController {
 
     @Autowired
     private ProductoService productoService;
 
-    // Listar productos con paginación
+    // Listar productos con paginación filtrados por Botica
     @GetMapping
     public ResponseEntity<Map<String, Object>> listarProductos(
+            @RequestAttribute("idBotica") Integer idBotica,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "idProducto") String sortBy,
@@ -37,7 +37,7 @@ public class ProductoController {
                     ? Sort.Direction.DESC : Sort.Direction.ASC;
             Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
 
-            Page<ProductoDTO> productos = productoService.listarProductos(pageable);
+            Page<ProductoDTO> productos = productoService.listarProductos(idBotica, pageable);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -55,9 +55,10 @@ public class ProductoController {
         }
     }
 
-    // Buscar productos con filtros
+    // Buscar productos con filtros y Botica
     @GetMapping("/buscar")
     public ResponseEntity<Map<String, Object>> buscarProductos(
+            @RequestAttribute("idBotica") Integer idBotica,
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Integer idCategoria,
             @RequestParam(required = false) Integer idMarca,
@@ -67,7 +68,7 @@ public class ProductoController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<ProductoDTO> productos = productoService.buscarProductos(
-                    nombre, idCategoria, idMarca, pageable
+                    idBotica, nombre, idCategoria, idMarca, pageable
             );
 
             Map<String, Object> response = new HashMap<>();
@@ -105,13 +106,14 @@ public class ProductoController {
         }
     }
 
-    // Crear producto
+    // Crear producto para la Botica del usuario autenticado
     @PostMapping
     public ResponseEntity<Map<String, Object>> crearProducto(
+            @RequestAttribute("idBotica") Integer idBotica,
             @Valid @RequestBody CreateProductoDTO dto
     ) {
         try {
-            ProductoDTO producto = productoService.crearProducto(dto);
+            ProductoDTO producto = productoService.crearProducto(idBotica, dto);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -169,16 +171,17 @@ public class ProductoController {
         }
     }
 
-    // Productos con stock bajo
+    // Productos con stock bajo por Botica
     @GetMapping("/stock-bajo")
     public ResponseEntity<Map<String, Object>> productosStockBajo(
+            @RequestAttribute("idBotica") Integer idBotica,
             @RequestParam(defaultValue = "10") Integer minStock,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<ProductoDTO> productos = productoService.productosStockBajo(minStock, pageable);
+            Page<ProductoDTO> productos = productoService.productosStockBajo(idBotica, minStock, pageable);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
