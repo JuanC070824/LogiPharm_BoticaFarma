@@ -1,6 +1,7 @@
 # DIRECTORIOS DE DATOS GENERADOS
 
 # --- FRONTEND (React/Node) ---
+**/node_modules/
 node_modules/
 dist/
 build/

@@ -1,6 +1,7 @@
 // src/services/reporteService.ts
-
-const API_URL_VENTAS = 'http://localhost:8080/boticafarma/ventas';
+import { API_BASE_URL } from '../config/api';
+const API_URL_VENTAS = `${API_BASE_URL}boticafarma/ventas`;
+// const API_URL_VENTAS = 'http://localhost:8080/boticafarma/ventas';
 
 // MODIFICACIÓN CLAVE: Ahora acepta el parámetro 'tipo'
 export const descargarReporteVentas = async (tipo: 'diario' | 'mensual'): Promise<void> => {
