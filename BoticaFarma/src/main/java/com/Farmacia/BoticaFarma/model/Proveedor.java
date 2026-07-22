@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 @Entity
-@Table(name="Proveedor")
+@Table(name="proveedor")
 
 public class Proveedor {
     @Id

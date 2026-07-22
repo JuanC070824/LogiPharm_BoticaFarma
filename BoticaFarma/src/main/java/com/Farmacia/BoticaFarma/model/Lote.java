@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name="Lote")
+@Table(name="lote")
 public class Lote {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
