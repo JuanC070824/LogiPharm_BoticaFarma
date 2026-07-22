@@ -38,7 +38,7 @@ public class Producto {
     @Column(name="precio", precision=10, scale=2, nullable=false)
     private BigDecimal Precio;
 
-    @Column(name="Stock", nullable = false)
+    @Column(name="stock", nullable = false)
     private int Stock;
 
     @ManyToMany
