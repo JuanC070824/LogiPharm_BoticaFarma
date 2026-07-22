@@ -1,6 +1,6 @@
 // src/services/reporteService.ts
 import { API_BASE_URL } from '../config/api';
-const API_URL_VENTAS = `${API_BASE_URL}boticafarma/ventas`;
+const API_URL_VENTAS = `${API_BASE_URL}/boticafarma/ventas`;
 // const API_URL_VENTAS = 'http://localhost:8080/boticafarma/ventas';
 
 // MODIFICACIÓN CLAVE: Ahora acepta el parámetro 'tipo'
