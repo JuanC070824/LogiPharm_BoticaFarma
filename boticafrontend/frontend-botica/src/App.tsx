@@ -5,8 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import Dashboard from "./Pages/Dashboard";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom"; import Dashboard from "./Pages/Dashboard";
 import Delivery from "./Pages/Delivery";
 import Inventario from "./Pages/Inventario";
 import Login from "./Pages/Login";
@@ -60,7 +59,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           {/* Rutas públicas */}
           <Route path="/login" element={<Login />} />
@@ -141,7 +140,7 @@ const App = () => (
           {/* Página 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
