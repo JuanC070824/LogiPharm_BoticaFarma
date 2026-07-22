@@ -1,5 +1,8 @@
 const getIdAlmacen = () => localStorage.getItem('idAlmacen');
-const API_URL = 'http://localhost:8080/boticafarma';
+import { API_BASE_URL } from '../config/api';
+const API_URL = `${API_BASE_URL}/boticafarma`;
+
+//const API_URL = 'http://localhost:8080/boticafarma';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');

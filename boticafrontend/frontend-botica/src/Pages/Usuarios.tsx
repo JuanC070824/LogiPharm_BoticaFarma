@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getSucursalesByBotica } from '../services/sucursalService';
-const API_URL = 'http://localhost:8080/api/usuarios';
+import { API_BASE_URL } from '../config/api';
+const API_URL = `${API_BASE_URL}/api/usuarios`;
+//const API_URL = 'http://localhost:8080/api/usuarios';
 
 interface Usuario {
   idUsuario: number;

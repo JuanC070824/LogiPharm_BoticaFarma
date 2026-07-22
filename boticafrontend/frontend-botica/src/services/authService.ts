@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8080';
+import { API_BASE_URL } from '../config/api';
 
 export interface LoginRequest {
   username: string;
@@ -35,7 +34,7 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
   try {
     const response = await axios.post(`${API_BASE_URL}/boticafarma/login`, credentials);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error) && error.response) {
       return error.response.data;
     }
@@ -44,7 +43,7 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
 };
 
 export const registerBotica = async (data: any) => {
-  const response = await fetch("http://localhost:8080/api/auth/register-botica", {
+  const response = await fetch(`${API_BASE_URL}/api/auth/register-botica`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

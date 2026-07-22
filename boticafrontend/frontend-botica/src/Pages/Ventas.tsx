@@ -8,6 +8,8 @@ import { Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_BASE_URL } from '../config/api';
+const API_URL = `${API_BASE_URL}/boticafarma`;
 
 interface CartItem {
   idProducto: number;
@@ -77,7 +79,7 @@ const Ventas = () => {
 
 const cargarRepartidores = async () => {
   try {
-    const response = await fetch('http://localhost:8080/api/usuarios/lista', {
+    const response = await fetch(`${API_BASE_URL}/api/usuarios/lista`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,

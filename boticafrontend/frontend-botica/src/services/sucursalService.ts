@@ -1,6 +1,7 @@
 import axios from 'axios';
-
-const API_URL = 'http://localhost:8080/api/almacenes';
+import { API_BASE_URL } from '../config/api';
+const API_URL = `${API_BASE_URL}/api/almacenes`;
+// const API_URL = 'http://localhost:8080/api/almacenes';
 
 export const getSucursalesByBotica = async (idBotica: string | number) => {
   const token = localStorage.getItem('token');

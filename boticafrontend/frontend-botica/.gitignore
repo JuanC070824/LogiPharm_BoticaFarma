@@ -6,7 +6,7 @@ node_modules/
 build/
 dist/
 out/
-
+**/node_modules/
 ##########################
 # VARIABLES DE ENTORNO   #
 ##########################
